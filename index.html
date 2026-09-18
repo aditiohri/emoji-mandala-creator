@@ -19,6 +19,7 @@
   [hidden] { display: none !important; }
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@%5E1/index.js"></script>
 <title>Mandala Maker</title>
 <style>
   :root{
@@ -114,6 +115,7 @@
     box-shadow:0 0 0 1px var(--line), 0 24px 60px -20px rgba(0,0,0,0.35);
     background:var(--paper);
     overflow:hidden;
+    transform:scale(1);
   }
   canvas{
     width:100%;
@@ -143,6 +145,9 @@
     display:flex;
     flex-direction:column;
     gap:8px;
+  }
+  @media (max-width: 860px){
+    .zoom-field{ display:none; }
   }
   .field label, .group-label{
     font-size:0.72rem;
@@ -188,6 +193,40 @@
   .emoji-chip.active{
     border-color:var(--coral);
     background:color-mix(in srgb, var(--coral) 16%, var(--paper-2));
+  }
+
+  .palette-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    min-height:34px;
+  }
+  .palette-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:1rem;
+    padding:4px 4px 4px 10px;
+    border-radius:999px;
+    background:var(--paper-2);
+    border:1px solid var(--line);
+  }
+  .palette-chip button{
+    all:unset;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    font-size:0.7rem;
+    line-height:1;
+    color:var(--text-dim);
+    cursor:pointer;
+  }
+  .palette-chip button:hover{
+    background:color-mix(in srgb, var(--coral) 20%, transparent);
+    color:var(--coral);
   }
 
   .custom-row{
@@ -320,6 +359,36 @@
     -webkit-touch-callout:default;
     user-select:auto;
   }
+
+  #emojiDialog{
+    padding:0;
+    border:1px solid var(--line);
+    border-radius:14px;
+    width:min(360px, 92vw);
+    background:var(--paper);
+    color:var(--text);
+  }
+  #emojiDialog::backdrop{
+    background:rgba(0,0,0,0.4);
+  }
+  .emoji-dialog-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 14px;
+    border-bottom:1px solid var(--line);
+    font-size:0.85rem;
+  }
+  emoji-picker{
+    width:100%;
+    height:420px;
+    --background: var(--paper);
+    --border-color: var(--line);
+    --indicator-color: var(--coral);
+    --outline-color: var(--coral);
+    --input-border-color: var(--line);
+    --input-font-color: var(--text);
+  }
 </style>
 
 
@@ -340,12 +409,31 @@
 
     <div class="panel">
       <div class="field">
-        <label class="group-label">Emoji set</label>
-        <div class="emoji-grid" id="emojiGrid"></div>
+        <label class="group-label">Your palette</label>
+        <div class="palette-chips" id="paletteChips"></div>
         <div class="custom-row">
-          <input type="text" id="customEmoji" placeholder="add your own, e.g. 🦋✨" maxlength="20">
-          <button class="btn" id="addCustom">Add</button>
+          <input type="text" id="customEmoji" placeholder="tap here, then use your emoji keyboard" maxlength="20">
+          <button class="btn" id="browseEmoji" type="button">🔍 Browse</button>
         </div>
+        <p class="hint">Emoji you type or paste are added automatically. On phone, tap the field to bring up your emoji keyboard; on Mac, try Cmd+Ctrl+Space. Or browse the full library.</p>
+      </div>
+
+      <dialog id="emojiDialog">
+        <div class="emoji-dialog-head">
+          <strong>Browse emoji</strong>
+          <button class="btn ghost small" id="closeEmojiDialog" type="button">Close</button>
+        </div>
+        <emoji-picker id="emojiPicker"></emoji-picker>
+      </dialog>
+
+      <div class="field">
+        <label class="group-label">Quick add</label>
+        <div class="emoji-grid" id="emojiGrid"></div>
+      </div>
+
+      <div class="field zoom-field">
+        <label>View zoom <span class="val" id="zoomVal">100%</span></label>
+        <input type="range" id="zoom" min="70" max="160" value="100">
       </div>
 
       <div class="field">
@@ -411,7 +499,8 @@
           <button class="btn" id="shuffle">🎲 Shuffle</button>
           <button class="btn primary" id="save">⬇ Save / share image</button>
         </div>
-        <p class="hint">Tap emoji above to build your palette — the mandala redraws as you go. "Save image" renders a PNG you can send or print.</p>
+        <button class="btn full" id="share" type="button" hidden>📤 Share</button>
+        <p class="hint">The mandala redraws as you go. "Save image" renders a PNG you can send or print.</p>
 
         <div class="export" id="exportPanel" hidden>
           <div class="export-head">
@@ -446,7 +535,8 @@
     centerMode: "emoji",
     alternate: true,
     faceOutward: false,
-    backdrop: "soft"
+    backdrop: "soft",
+    zoom: 100
   };
 
   const canvas = document.getElementById("canvas");
@@ -538,7 +628,54 @@
     }
   }
 
-  // --- emoji grid ---
+  // split a string into individual emoji-ish clusters roughly by code point pairs
+  function splitEmojiClusters(val){
+    const chars = Array.from(val);
+    const clusters = [];
+    let i = 0;
+    while (i < chars.length){
+      let cluster = chars[i];
+      if (chars[i+1] === "‍" || (chars[i+1] && chars[i+1].codePointAt(0) === 0xFE0F)){
+        cluster += chars[i+1]; i++;
+      }
+      clusters.push(cluster);
+      i++;
+    }
+    return clusters;
+  }
+
+  function syncGridActiveStates(){
+    document.querySelectorAll(".emoji-chip").forEach(chip => {
+      chip.classList.toggle("active", state.palette.includes(chip.textContent));
+    });
+  }
+
+  function renderPaletteChips(){
+    const wrap = document.getElementById("paletteChips");
+    wrap.innerHTML = "";
+    state.palette.forEach((e, i) => {
+      const chip = document.createElement("span");
+      chip.className = "palette-chip";
+      const label = document.createElement("span");
+      label.textContent = e;
+      chip.appendChild(label);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "×";
+      remove.setAttribute("aria-label", "Remove " + e);
+      remove.addEventListener("click", () => {
+        if (state.palette.length <= 1) return;
+        state.palette.splice(i, 1);
+        renderPaletteChips();
+        syncGridActiveStates();
+        draw();
+      });
+      chip.appendChild(remove);
+      wrap.appendChild(chip);
+    });
+  }
+
+  // --- emoji grid (quick add) ---
   const grid = document.getElementById("emojiGrid");
   PICKER_EMOJI.forEach(e => {
     const chip = document.createElement("div");
@@ -552,27 +689,48 @@
         state.palette.push(e);
       }
       chip.classList.toggle("active", state.palette.includes(e));
+      renderPaletteChips();
       draw();
     });
     grid.appendChild(chip);
   });
 
-  document.getElementById("addCustom").addEventListener("click", () => {
-    const input = document.getElementById("customEmoji");
-    const val = input.value.trim();
-    if (!val) return;
-    // split into individual emoji-ish clusters roughly by code point pairs
-    const chars = Array.from(val);
-    let i = 0;
-    while (i < chars.length){
-      let cluster = chars[i];
-      if (chars[i+1] === "‍" || (chars[i+1] && chars[i+1].codePointAt(0) === 0xFE0F)){
-        cluster += chars[i+1]; i++;
-      }
-      state.palette.push(cluster);
-      i++;
-    }
-    input.value = "";
+  // --- custom / native emoji keyboard entry ---
+  const customInput = document.getElementById("customEmoji");
+  let addTimer = null;
+  customInput.addEventListener("input", () => {
+    clearTimeout(addTimer);
+    addTimer = setTimeout(() => {
+      const val = customInput.value.trim();
+      customInput.value = "";
+      if (!val) return;
+      splitEmojiClusters(val).forEach(c => state.palette.push(c));
+      renderPaletteChips();
+      syncGridActiveStates();
+      draw();
+    }, 150);
+  });
+
+  renderPaletteChips();
+
+  // --- browse full emoji library (emoji-picker-element) ---
+  const emojiDialog = document.getElementById("emojiDialog");
+  const emojiPicker = document.getElementById("emojiPicker");
+  document.getElementById("browseEmoji").addEventListener("click", () => {
+    emojiDialog.showModal();
+  });
+  document.getElementById("closeEmojiDialog").addEventListener("click", () => {
+    emojiDialog.close();
+  });
+  emojiDialog.addEventListener("click", (e) => {
+    if (e.target === emojiDialog) emojiDialog.close();
+  });
+  emojiPicker.addEventListener("emoji-click", (e) => {
+    const emoji = e.detail && e.detail.unicode;
+    if (!emoji) return;
+    state.palette.push(emoji);
+    renderPaletteChips();
+    syncGridActiveStates();
     draw();
   });
 
@@ -587,6 +745,13 @@
     });
     if (label) label.textContent = fmt(state[stateKey]);
   }
+
+  const canvasWrap = document.querySelector(".canvas-wrap");
+  document.getElementById("zoom").addEventListener("input", e => {
+    state.zoom = Number(e.target.value);
+    document.getElementById("zoomVal").textContent = state.zoom + "%";
+    canvasWrap.style.transform = "scale(" + (state.zoom/100) + ")";
+  });
 
   bindRange("rings", "ringsVal", "rings", v => v);
   bindRange("symmetry", "symVal", "symmetry", v => v);
@@ -634,9 +799,8 @@
     const count = 4 + Math.floor(Math.random()*4);
     const shuffled = [...PICKER_EMOJI].sort(() => Math.random()-0.5);
     state.palette = shuffled.slice(0, count);
-    document.querySelectorAll(".emoji-chip").forEach(chip => {
-      chip.classList.toggle("active", state.palette.includes(chip.textContent));
-    });
+    syncGridActiveStates();
+    renderPaletteChips();
 
     draw();
   });
@@ -655,13 +819,25 @@
     exportImg.removeAttribute("src");
   });
 
-  document.getElementById("save").addEventListener("click", async () => {
-    const btn = document.getElementById("save");
+  function renderBlob(){
+    return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+  }
+
+  function mandalaFilename(){
+    return "mandala-" + new Date().toISOString().slice(0,10) + ".png";
+  }
+
+  const saveBtn = document.getElementById("save");
+  const isTouch = matchMedia("(pointer: coarse)").matches;
+  saveBtn.textContent = isTouch ? "⬇ Save / share image" : "⬇ Save image";
+
+  saveBtn.addEventListener("click", async () => {
+    const btn = saveBtn;
     const original = btn.textContent;
     const reset = () => setTimeout(() => { btn.textContent = original; }, 1800);
     btn.textContent = "Rendering…";
 
-    const filename = "mandala-" + new Date().toISOString().slice(0,10) + ".png";
+    const filename = mandalaFilename();
     const dataUrl = canvas.toDataURL("image/png");
 
     let downloads = null;
@@ -669,31 +845,61 @@
       downloads = (window.claude && window.claude.use) ? await window.claude.use("downloads") : null;
     } catch(e){ downloads = null; }
 
-    canvas.toBlob(async (blob) => {
-      // 1. Signed-in Claude viewers: native save dialog.
-      if (downloads && blob){
-        try{
-          await downloads.save({ filename, data: blob });
-          btn.textContent = "Saved ✓"; reset(); return;
-        } catch(err){ /* fall through */ }
-      }
-      // 2. Phones with Web Share API.
-      if (blob && navigator.share && navigator.canShare){
-        try{
-          const file = new File([blob], filename, { type: "image/png" });
-          if (navigator.canShare({ files: [file] })){
-            await navigator.share({ files: [file], title: "Emoji mandala" });
-            btn.textContent = "Shared ✓"; reset(); return;
-          }
-        } catch(err){
-          if (err && err.name === "AbortError"){ btn.textContent = original; return; }
+    const blob = await renderBlob();
+
+    // 1. Signed-in Claude viewers: native save dialog.
+    if (downloads && blob){
+      try{
+        await downloads.save({ filename, data: blob });
+        btn.textContent = "Saved ✓"; reset(); return;
+      } catch(err){ /* fall through */ }
+    }
+    // 2. Touch devices with Web Share API: OS share sheet (Save to Photos, etc).
+    if (isTouch && blob && navigator.share && navigator.canShare){
+      try{
+        const file = new File([blob], filename, { type: "image/png" });
+        if (navigator.canShare({ files: [file] })){
+          await navigator.share({ files: [file], title: "Emoji mandala" });
+          btn.textContent = "Shared ✓"; reset(); return;
         }
+      } catch(err){
+        if (err && err.name === "AbortError"){ btn.textContent = original; return; }
       }
-      // 3. Everyone else: inline image to long-press / right-click.
-      showExportImage(dataUrl);
-      btn.textContent = original;
-    }, "image/png");
+    }
+    // 3. Desktop: direct download straight to the Downloads folder, no prompts.
+    if (!isTouch && blob){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      btn.textContent = "Saved ✓"; reset(); return;
+    }
+    // 4. Fallback: inline image to long-press / right-click.
+    showExportImage(dataUrl);
+    btn.textContent = original;
   });
+
+  // --- separate, explicit share action (independent of the save flow above) ---
+  const shareBtn = document.getElementById("share");
+  const canNativeShare = !!(navigator.share && navigator.canShare &&
+    navigator.canShare({ files: [new File([], "test.png", { type: "image/png" })] }));
+  if (canNativeShare){
+    shareBtn.hidden = false;
+    shareBtn.addEventListener("click", async () => {
+      const original = shareBtn.textContent;
+      shareBtn.textContent = "Rendering…";
+      const blob = await renderBlob();
+      try{
+        const file = new File([blob], mandalaFilename(), { type: "image/png" });
+        await navigator.share({ files: [file], title: "Emoji mandala" });
+      } catch(err){ /* cancelled or unsupported at call time */ }
+      shareBtn.textContent = original;
+    });
+  }
 
   if (matchMedia){
     matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
