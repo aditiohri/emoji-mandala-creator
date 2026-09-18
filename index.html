@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f0e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1526" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mandala Maker">
+<meta name="description" content="Emoji kaleidoscopes, spun to order. Build a mandala from your favourite emoji and save it as an image.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+  html, body { height: 100%; }
+  body { margin: 0; font-size: 14px; -webkit-font-smoothing: antialiased; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<title>Mandala Maker</title>
+<style>
+  :root{
+    --ink:#1a1526;
+    --ink-2:#241c38;
+    --paper:#f7f0e2;
+    --paper-2:#efe6d2;
+    --coral:#ff6b4a;
+    --violet:#8b6bff;
+    --gold:#d4a72c;
+    --line:#e4d9c2;
+    --line-dark:#3a3050;
+    --text:#241c38;
+    --text-dim:#6b6280;
+    --text-on-ink:#f2ecdd;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#1a1526;
+      --paper-2:#221b33;
+      --line:#3a3050;
+      --text:#f2ecdd;
+      --text-dim:#a79fc0;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#1a1526;
+    --paper-2:#221b33;
+    --line:#3a3050;
+    --text:#f2ecdd;
+    --text-dim:#a79fc0;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--paper);
+    color:var(--text);
+    font-family:"Sora", ui-sans-serif, system-ui, sans-serif;
+    margin:0;
+    padding-inline:0;
+  }
+  .app{
+    display:flex;
+    flex-direction:column;
+    min-height:100%;
+  }
+  header{
+    padding:20px 24px 14px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  h1{
+    font-family:"Fraunces", Georgia, serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:1.6rem;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  header .sub{
+    color:var(--text-dim);
+    font-size:0.85rem;
+  }
+  main{
+    display:flex;
+    gap:0;
+    flex:1;
+    min-height:0;
+  }
+  @media (max-width: 860px){
+    main{ flex-direction:column; }
+  }
+
+  .stage{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px 16px;
+    background:
+      radial-gradient(circle at center, transparent 0%, transparent 55%, var(--paper-2) 100%);
+    position:relative;
+    min-height:min(72vh, 640px);
+  }
+  .canvas-wrap{
+    position:relative;
+    width:min(560px, 100%);
+    aspect-ratio:1/1;
+    border-radius:50%;
+    box-shadow:0 0 0 1px var(--line), 0 24px 60px -20px rgba(0,0,0,0.35);
+    background:var(--paper);
+    overflow:hidden;
+  }
+  canvas{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  .panel{
+    width:340px;
+    flex-shrink:0;
+    padding:20px 22px 32px;
+    border-left:1px solid var(--line);
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+  }
+  @media (max-width: 860px){
+    .panel{
+      width:100%;
+      border-left:none;
+      border-top:1px solid var(--line);
+    }
+  }
+
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .field label, .group-label{
+    font-size:0.72rem;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--text-dim);
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .field label span.val{
+    font-family:"JetBrains Mono", ui-monospace, monospace;
+    color:var(--coral);
+    font-weight:500;
+    letter-spacing:0;
+    text-transform:none;
+  }
+  input[type="range"]{
+    width:100%;
+    accent-color:var(--coral);
+    height:20px;
+  }
+
+  .emoji-grid{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:6px;
+  }
+  .emoji-chip{
+    font-size:1.15rem;
+    line-height:1;
+    padding:6px 0;
+    text-align:center;
+    border-radius:10px;
+    border:1px solid transparent;
+    background:var(--paper-2);
+    cursor:pointer;
+    user-select:none;
+    transition:transform 0.08s ease, border-color 0.08s ease;
+  }
+  .emoji-chip:hover{ transform:translateY(-1px); }
+  .emoji-chip.active{
+    border-color:var(--coral);
+    background:color-mix(in srgb, var(--coral) 16%, var(--paper-2));
+  }
+
+  .custom-row{
+    display:flex;
+    gap:8px;
+  }
+  .custom-row input[type="text"]{
+    flex:1;
+    font-size:1rem;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--paper-2);
+    color:var(--text);
+    font-family:inherit;
+  }
+  .btn{
+    font-family:"Sora", sans-serif;
+    font-size:0.82rem;
+    font-weight:600;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--paper-2);
+    color:var(--text);
+    padding:9px 14px;
+    cursor:pointer;
+    letter-spacing:0.01em;
+  }
+  .btn:hover{ border-color:var(--coral); }
+  .btn.primary{
+    background:var(--coral);
+    border-color:var(--coral);
+    color:#fff8f4;
+  }
+  .btn.primary:hover{ background:color-mix(in srgb, var(--coral) 88%, black); }
+  .btn.ghost{ background:transparent; }
+  .btn.full{ width:100%; }
+
+  .row{ display:flex; gap:10px; }
+  .row > *{ flex:1; }
+
+  select{
+    width:100%;
+    font-family:inherit;
+    font-size:0.9rem;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--paper-2);
+    color:var(--text);
+  }
+
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:0.85rem;
+  }
+  .toggle-row label{
+    text-transform:none;
+    letter-spacing:0;
+    font-size:0.85rem;
+    color:var(--text);
+    font-weight:500;
+  }
+  .switch{
+    position:relative;
+    width:36px;
+    height:20px;
+    flex-shrink:0;
+  }
+  .switch input{
+    opacity:0; width:0; height:0;
+  }
+  .slider-pill{
+    position:absolute; inset:0;
+    background:var(--line);
+    border-radius:999px;
+    transition:0.15s;
+    cursor:pointer;
+  }
+  .slider-pill::before{
+    content:"";
+    position:absolute;
+    height:14px; width:14px;
+    left:3px; top:3px;
+    background:var(--paper);
+    border-radius:50%;
+    transition:0.15s;
+  }
+  .switch input:checked + .slider-pill{ background:var(--coral); }
+  .switch input:checked + .slider-pill::before{ transform:translateX(16px); }
+
+  .footer-actions{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding-top:8px;
+    border-top:1px solid var(--line);
+  }
+  .hint{
+    font-size:0.72rem;
+    color:var(--text-dim);
+    line-height:1.5;
+    margin:0;
+  }
+  .hint b{ color:var(--text); font-weight:600; }
+  .btn.small{ padding:5px 10px; font-size:0.74rem; }
+
+  .export{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:12px;
+    border:1px solid var(--coral);
+    border-radius:12px;
+    background:var(--paper-2);
+  }
+  .export-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:0.85rem;
+  }
+  .export img{
+    width:100%;
+    height:auto;
+    border-radius:50%;
+    display:block;
+    -webkit-touch-callout:default;
+    user-select:auto;
+  }
+</style>
+
+
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Mandala Maker</h1>
+    <span class="sub">emoji kaleidoscopes, spun to order</span>
+  </header>
+
+  <main>
+    <div class="stage">
+      <div class="canvas-wrap">
+        <canvas id="canvas" width="1000" height="1000"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="field">
+        <label class="group-label">Emoji set</label>
+        <div class="emoji-grid" id="emojiGrid"></div>
+        <div class="custom-row">
+          <input type="text" id="customEmoji" placeholder="add your own, e.g. 🦋✨" maxlength="20">
+          <button class="btn" id="addCustom">Add</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Rings <span class="val" id="ringsVal">6</span></label>
+        <input type="range" id="rings" min="1" max="12" value="6">
+      </div>
+
+      <div class="field">
+        <label>Symmetry (spokes) <span class="val" id="symVal">10</span></label>
+        <input type="range" id="symmetry" min="3" max="24" value="10">
+      </div>
+
+      <div class="field">
+        <label>Rotation offset <span class="val" id="rotVal">0°</span></label>
+        <input type="range" id="rotation" min="0" max="360" value="0">
+      </div>
+
+      <div class="field">
+        <label>Emoji size <span class="val" id="sizeVal">44px</span></label>
+        <input type="range" id="emojiSize" min="20" max="80" value="44">
+      </div>
+
+      <div class="field">
+        <label>Ring spacing <span class="val" id="spaceVal">1.0×</span></label>
+        <input type="range" id="spacing" min="50" max="150" value="100">
+      </div>
+
+      <div class="field">
+        <label class="group-label">Center</label>
+        <select id="centerMode">
+          <option value="emoji">Center emoji</option>
+          <option value="empty">Empty center</option>
+        </select>
+      </div>
+
+      <div class="toggle-row">
+        <label for="alternate">Alternate ring direction</label>
+        <div class="switch">
+          <input type="checkbox" id="alternate" checked>
+          <span class="slider-pill"></span>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <label for="faceOutward">Rotate emoji outward</label>
+        <div class="switch">
+          <input type="checkbox" id="faceOutward">
+          <span class="slider-pill"></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="group-label">Backdrop</label>
+        <select id="backdrop">
+          <option value="none">None</option>
+          <option value="soft" selected>Soft glow</option>
+          <option value="rings">Guide rings</option>
+        </select>
+      </div>
+
+      <div class="footer-actions">
+        <div class="row">
+          <button class="btn" id="shuffle">🎲 Shuffle</button>
+          <button class="btn primary" id="save">⬇ Save / share image</button>
+        </div>
+        <p class="hint">Tap emoji above to build your palette — the mandala redraws as you go. "Save image" renders a PNG you can send or print.</p>
+
+        <div class="export" id="exportPanel" hidden>
+          <div class="export-head">
+            <strong>Your mandala, ready to save</strong>
+            <button class="btn ghost small" id="closeExport">Close</button>
+          </div>
+          <img id="exportImg" alt="Rendered emoji mandala">
+          <p class="hint"><b>Phone:</b> press and hold the image, then "Save to Photos" or "Share".<br><b>Desktop:</b> right-click the image and "Save image as…".</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function(){
+  const DEFAULT_PALETTE = ["✨","🌸","🔥","🌊","🦋","🌙","🍃","💠"];
+  const PICKER_EMOJI = [
+    "✨","🌸","🌙","🔥","🌊","🦋","🍃","💠","⭐","🌻",
+    "💎","🌀","🍄","🐚","🌈","🪷","🌺","🍁","☀️","❄️",
+    "🕸️","🌼","🪐","🧿","🍂","🌷","🦚","🐉","🌹","🎇",
+    "🍥","🌿","🐝","🌵","🍒","🌾","🎐","🦢","🧡","💫"
+  ];
+
+  const state = {
+    palette: [...DEFAULT_PALETTE],
+    rings: 6,
+    symmetry: 10,
+    rotation: 0,
+    emojiSize: 44,
+    spacing: 100,
+    centerMode: "emoji",
+    alternate: true,
+    faceOutward: false,
+    backdrop: "soft"
+  };
+
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  function seededPick(seedNum, arr){
+    return arr[Math.abs(Math.floor(seedNum)) % arr.length];
+  }
+
+  function draw(){
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    // background
+    const isDark = matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+    const rootTheme = document.documentElement.getAttribute("data-theme");
+    const dark = rootTheme === "dark" || (rootTheme !== "light" && isDark);
+    const bg = dark ? "#1a1526" : "#f7f0e2";
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    const cx = W/2, cy = H/2;
+    const maxR = W/2 - state.emojiSize*0.9;
+
+    if (state.backdrop === "soft"){
+      const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,maxR*1.05);
+      if (dark){
+        grad.addColorStop(0, "rgba(139,107,255,0.16)");
+        grad.addColorStop(1, "rgba(139,107,255,0)");
+      } else {
+        grad.addColorStop(0, "rgba(255,107,74,0.10)");
+        grad.addColorStop(1, "rgba(255,107,74,0)");
+      }
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx,cy,maxR*1.05,0,Math.PI*2);
+      ctx.fill();
+    } else if (state.backdrop === "rings"){
+      ctx.strokeStyle = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+      ctx.lineWidth = 1;
+      for (let i=1; i<=state.rings; i++){
+        const r = (i/state.rings) * maxR;
+        ctx.beginPath();
+        ctx.arc(cx,cy,r,0,Math.PI*2);
+        ctx.stroke();
+      }
+    }
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = dark ? "#f2ecdd" : "#241c38";
+    ctx.font = state.emojiSize + "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+
+    const palette = state.palette.length ? state.palette : DEFAULT_PALETTE;
+
+    if (state.centerMode === "emoji"){
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.font = (state.emojiSize*1.05) + "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+      ctx.fillText(palette[0], 0, 0);
+      ctx.restore();
+    }
+
+    const ringSpacing = (state.spacing/100) * (maxR / state.rings);
+
+    let paletteIdx = 0;
+    for (let ring=1; ring<=state.rings; ring++){
+      const r = ring * ringSpacing;
+      const dir = (state.alternate && ring % 2 === 0) ? -1 : 1;
+      const ringRotOffset = (state.rotation * Math.PI/180) + (state.alternate && ring % 2 === 0 ? Math.PI/state.symmetry : 0);
+      const ringSize = state.emojiSize * (1 - (ring-1)*0.03);
+      ctx.font = Math.max(14, ringSize) + "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+
+      for (let s=0; s<state.symmetry; s++){
+        const angle = dir * (s / state.symmetry) * Math.PI*2 + ringRotOffset;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        const emoji = seededPick(ring*31 + s*7, palette);
+
+        ctx.save();
+        ctx.translate(x, y);
+        if (state.faceOutward){
+          ctx.rotate(angle + Math.PI/2);
+        }
+        ctx.fillText(emoji, 0, 0);
+        ctx.restore();
+        paletteIdx++;
+      }
+    }
+  }
+
+  // --- emoji grid ---
+  const grid = document.getElementById("emojiGrid");
+  PICKER_EMOJI.forEach(e => {
+    const chip = document.createElement("div");
+    chip.className = "emoji-chip" + (state.palette.includes(e) ? " active" : "");
+    chip.textContent = e;
+    chip.addEventListener("click", () => {
+      const i = state.palette.indexOf(e);
+      if (i >= 0){
+        if (state.palette.length > 1) state.palette.splice(i,1);
+      } else {
+        state.palette.push(e);
+      }
+      chip.classList.toggle("active", state.palette.includes(e));
+      draw();
+    });
+    grid.appendChild(chip);
+  });
+
+  document.getElementById("addCustom").addEventListener("click", () => {
+    const input = document.getElementById("customEmoji");
+    const val = input.value.trim();
+    if (!val) return;
+    // split into individual emoji-ish clusters roughly by code point pairs
+    const chars = Array.from(val);
+    let i = 0;
+    while (i < chars.length){
+      let cluster = chars[i];
+      if (chars[i+1] === "‍" || (chars[i+1] && chars[i+1].codePointAt(0) === 0xFE0F)){
+        cluster += chars[i+1]; i++;
+      }
+      state.palette.push(cluster);
+      i++;
+    }
+    input.value = "";
+    draw();
+  });
+
+  // --- sliders ---
+  function bindRange(id, labelId, stateKey, fmt){
+    const el = document.getElementById(id);
+    const label = document.getElementById(labelId);
+    el.addEventListener("input", () => {
+      state[stateKey] = Number(el.value);
+      if (label) label.textContent = fmt(state[stateKey]);
+      draw();
+    });
+    if (label) label.textContent = fmt(state[stateKey]);
+  }
+
+  bindRange("rings", "ringsVal", "rings", v => v);
+  bindRange("symmetry", "symVal", "symmetry", v => v);
+  bindRange("rotation", "rotVal", "rotation", v => v + "°");
+  bindRange("emojiSize", "sizeVal", "emojiSize", v => v + "px");
+  bindRange("spacing", "spaceVal", "spacing", v => (v/100).toFixed(1) + "×");
+
+  document.getElementById("centerMode").addEventListener("change", e => {
+    state.centerMode = e.target.value;
+    draw();
+  });
+  document.getElementById("backdrop").addEventListener("change", e => {
+    state.backdrop = e.target.value;
+    draw();
+  });
+  document.getElementById("alternate").addEventListener("change", e => {
+    state.alternate = e.target.checked;
+    draw();
+  });
+  document.getElementById("faceOutward").addEventListener("change", e => {
+    state.faceOutward = e.target.checked;
+    draw();
+  });
+
+  document.getElementById("shuffle").addEventListener("click", () => {
+    state.rings = 3 + Math.floor(Math.random()*9);
+    state.symmetry = 4 + Math.floor(Math.random()*18);
+    state.rotation = Math.floor(Math.random()*360);
+    state.spacing = 60 + Math.floor(Math.random()*90);
+    state.alternate = Math.random() > 0.4;
+    state.faceOutward = Math.random() > 0.6;
+
+    document.getElementById("rings").value = state.rings;
+    document.getElementById("ringsVal").textContent = state.rings;
+    document.getElementById("symmetry").value = state.symmetry;
+    document.getElementById("symVal").textContent = state.symmetry;
+    document.getElementById("rotation").value = state.rotation;
+    document.getElementById("rotVal").textContent = state.rotation + "°";
+    document.getElementById("spacing").value = state.spacing;
+    document.getElementById("spaceVal").textContent = (state.spacing/100).toFixed(1) + "×";
+    document.getElementById("alternate").checked = state.alternate;
+    document.getElementById("faceOutward").checked = state.faceOutward;
+
+    // shuffle palette selection too, pick 4-7 random emoji
+    const count = 4 + Math.floor(Math.random()*4);
+    const shuffled = [...PICKER_EMOJI].sort(() => Math.random()-0.5);
+    state.palette = shuffled.slice(0, count);
+    document.querySelectorAll(".emoji-chip").forEach(chip => {
+      chip.classList.toggle("active", state.palette.includes(chip.textContent));
+    });
+
+    draw();
+  });
+
+  const exportPanel = document.getElementById("exportPanel");
+  const exportImg = document.getElementById("exportImg");
+
+  function showExportImage(dataUrl){
+    exportImg.src = dataUrl;
+    exportPanel.hidden = false;
+    exportPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  document.getElementById("closeExport").addEventListener("click", () => {
+    exportPanel.hidden = true;
+    exportImg.removeAttribute("src");
+  });
+
+  document.getElementById("save").addEventListener("click", async () => {
+    const btn = document.getElementById("save");
+    const original = btn.textContent;
+    const reset = () => setTimeout(() => { btn.textContent = original; }, 1800);
+    btn.textContent = "Rendering…";
+
+    const filename = "mandala-" + new Date().toISOString().slice(0,10) + ".png";
+    const dataUrl = canvas.toDataURL("image/png");
+
+    let downloads = null;
+    try{
+      downloads = (window.claude && window.claude.use) ? await window.claude.use("downloads") : null;
+    } catch(e){ downloads = null; }
+
+    canvas.toBlob(async (blob) => {
+      // 1. Signed-in Claude viewers: native save dialog.
+      if (downloads && blob){
+        try{
+          await downloads.save({ filename, data: blob });
+          btn.textContent = "Saved ✓"; reset(); return;
+        } catch(err){ /* fall through */ }
+      }
+      // 2. Phones with Web Share API.
+      if (blob && navigator.share && navigator.canShare){
+        try{
+          const file = new File([blob], filename, { type: "image/png" });
+          if (navigator.canShare({ files: [file] })){
+            await navigator.share({ files: [file], title: "Emoji mandala" });
+            btn.textContent = "Shared ✓"; reset(); return;
+          }
+        } catch(err){
+          if (err && err.name === "AbortError"){ btn.textContent = original; return; }
+        }
+      }
+      // 3. Everyone else: inline image to long-press / right-click.
+      showExportImage(dataUrl);
+      btn.textContent = original;
+    }, "image/png");
+  });
+
+  if (matchMedia){
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+  }
+
+  draw();
+})();
+</script>
+
+</body>
+</html>
