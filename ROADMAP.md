@@ -18,7 +18,9 @@ desktop save flow, a separate Share button, and (October 2026):
 
 Still open, roughly in the order we'd tackle them:
 
-## 1. Customizable mandala shapes (next; needs a spec first)
+## 1. Customizable mandala shapes (next; spec in review)
+
+Spec: `docs/superpowers/specs/2026-10-08-mandala-shapes-design.md`.
 
 Today `draw()` hardcodes concentric rings of evenly spaced emoji. Many
 traditional mandala families don't fit that: yantras (interlocking
@@ -49,19 +51,37 @@ Direction (to be confirmed in the brainstorm/spec, not decided):
   so emoji already in the default palette aren't counted until removed
   and re-added; decide whether that's good enough.
 
-## 3. Paid tier: personal gallery + PDF export
+## 3. Monetization experiment: template + build in public
 
-Biggest unknown, not yet scoped. Open questions before this can get a
-real design:
+Reframed: the app itself is probably not the product. The sellable
+asset is the *system* for going from idea to a live, installable,
+shareable app. The mandala maker is the demo and test subject, and
+stays free, static, and serverless (no auth, no backend).
 
-- A gallery of saved mandalas means *somewhere to save them* — this
-  app has no backend today. Per-device (`localStorage`/IndexedDB,
-  free but not synced across devices) vs. real accounts + storage
-  (synced, but a real backend to build and pay for)?
-- What does "paid" actually gate, and how — a one-time unlock, a
-  subscription, a simple client-side flag? Needs a payment processor
-  either way (e.g. Stripe), which is new infrastructure for a
-  currently static, serverless site.
-- PDF export is more self-contained (can likely be done client-side,
-  e.g. rendering the canvas into a PDF via a small library) and could
-  ship independently of the gallery/accounts question.
+Two tracks, run together:
+
+**A. Template / starter kit**
+- Separate the generic parts (PWA manifest, share/save flow, module
+  layout, deploy config) from the mandala-specific code.
+- Write a "clone to live URL" README.
+- Start as a free template repo with a waitlist; add paid extras only
+  if there is demand.
+
+**B. Build in public**
+- Document the deploy/share workflow while it is fresh; it doubles as
+  content and as the template's docs.
+- Post short updates ("shipped X, here's how").
+
+**Signals** (decide the thresholds *before* launching, so we are not
+rationalizing afterward): template stars/forks/waitlist signups, and
+followers/replies/"how did you do this?" messages.
+
+**Then, depending on momentum:** expand into a guide/course (people
+ask *how*) or a done-for-you build service (people ask *can you build
+me one*).
+
+**Optional side test:** a Stripe Payment Link for hi-res/PDF export,
+as an independent willingness-to-pay signal.
+
+**Deferred** unless the app itself shows traction: personal gallery,
+accounts/sync, native mobile wrapper.
