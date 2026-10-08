@@ -371,3 +371,6 @@ function setupBackgroundControls() {
 }
 
 setupBackgroundControls();
+
+// Initial draw
+draw();
