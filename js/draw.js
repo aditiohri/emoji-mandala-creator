@@ -1,5 +1,9 @@
 import { state, DEFAULT_PALETTE } from "./state.js";
 import { drawBackground } from "./backgrounds.js";
+import { getShape } from "./shapes/index.js";
+import { assignLegacy } from "./pattern.js";
+
+const FONT = "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
 
 export let canvas = null;
 export let ctx = null;
@@ -9,58 +13,50 @@ export function initCanvas(){
   ctx = canvas.getContext("2d");
 }
 
-export function draw(){
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0,0,W,H);
+// Draw a mandala on any square canvas of side W.
+// opts = { shape, params, palette, background, backdrop, emojiSize,
+//          rotation (degrees), centerMode, faceOutward, minFont }
+export function renderTo(ctx, W, opts){
+  const { shape, params, emojiSize, minFont, faceOutward } = opts;
+  ctx.clearRect(0, 0, W, W);
+  const dark = drawBackground(ctx, W, W, {
+    background: opts.background, backdrop: opts.backdrop, emojiSize,
+    guideRings: params.rings, // slice 1 only: backdrop guide circles
+  });
 
-  // Draw background and get whether it's dark for text color
-  const dark = drawBackground(ctx, W, H, state);
+  const cx = W/2, cy = W/2;
+  const radius = W/2 - emojiSize*0.9;
+  const rot = opts.rotation * Math.PI/180;
+  const cos = Math.cos(rot), sin = Math.sin(rot);
+  const palette = opts.palette.length ? opts.palette : DEFAULT_PALETTE;
 
-  const cx = W/2, cy = H/2;
-  const maxR = W/2 - state.emojiSize*0.9;
+  const { placements, groups } = shape.layout({ ...params, centerMode: opts.centerMode, radius, emojiSize, minFont });
+  const { emojiFor } = assignLegacy(groups, palette);
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = dark ? "#f2ecdd" : "#241c38";
-  ctx.font = state.emojiSize + "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
-
-  const palette = state.palette.length ? state.palette : DEFAULT_PALETTE;
-
-  if (state.centerMode === "emoji"){
+  for (const p of placements){
+    ctx.font = Math.max(minFont, emojiSize * p.scale) + FONT;
     ctx.save();
-    ctx.translate(cx, cy);
-    ctx.font = (state.emojiSize*1.05) + "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
-    ctx.fillText(palette[0], 0, 0);
+    ctx.translate(cx + p.x*cos - p.y*sin, cy + p.x*sin + p.y*cos);
+    if (faceOutward && p.heading !== null) ctx.rotate(p.heading + rot + Math.PI/2);
+    ctx.fillText(emojiFor(p.group, p.index), 0, 0);
     ctx.restore();
   }
+}
 
-  const ringSpacing = (state.spacing/100) * (maxR / state.rings);
-
-  let paletteIdx = 0;
-  for (let ring=1; ring<=state.rings; ring++){
-    const r = ring * ringSpacing;
-    const dir = (state.alternate && ring % 2 === 0) ? -1 : 1;
-    const ringPatternOffset = (ring * 31) % palette.length;
-    const ringRotOffset = (state.rotation * Math.PI/180) + (state.alternate && ring % 2 === 0 ? Math.PI/state.symmetry : 0);
-    const ringSize = state.emojiSize * (1 - (ring-1)*0.03);
-    ctx.font = Math.max(14, ringSize) + "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
-
-    for (let s=0; s<state.symmetry; s++){
-      const angle = dir * (s / state.symmetry) * Math.PI*2 + ringRotOffset;
-      const x = cx + Math.cos(angle) * r;
-      const y = cy + Math.sin(angle) * r;
-      // Cycle the palette by position so ring direction is visible; each ring
-      // starts at a different offset. Alternate rings run the other way via `dir`.
-      const emoji = palette[(ringPatternOffset + s) % palette.length];
-
-      ctx.save();
-      ctx.translate(x, y);
-      if (state.faceOutward){
-        ctx.rotate(angle + Math.PI/2);
-      }
-      ctx.fillText(emoji, 0, 0);
-      ctx.restore();
-      paletteIdx++;
-    }
-  }
+export function draw(){
+  renderTo(ctx, canvas.width, {
+    shape: getShape(state.shape),
+    params: state.shapeParams[state.shape],
+    palette: state.palette,
+    background: state.background,
+    backdrop: state.backdrop,
+    emojiSize: state.emojiSize,
+    rotation: state.rotation,
+    centerMode: state.centerMode,
+    faceOutward: state.faceOutward,
+    minFont: 14,
+  });
 }

@@ -32,9 +32,12 @@ function getLuminanceForGradient(color1, color2) {
   return (lum1 + lum2) / 2;
 }
 
+const imageLumCache = new WeakMap();
+
 // Get luminance from image (sample the center or downscale)
 function getLuminanceForImage(img) {
   if (!img) return 0.5;
+  if (imageLumCache.has(img)) return imageLumCache.get(img);
   const tempCanvas = document.createElement("canvas");
   tempCanvas.width = 64;
   tempCanvas.height = 64;
@@ -47,12 +50,13 @@ function getLuminanceForImage(img) {
   for (let i = 0; i < data.length; i += 4) {
     totalLum += getLuminance(data[i], data[i+1], data[i+2], data[i+3]/255);
   }
-  return totalLum / (data.length / 4);
+  const lum = totalLum / (data.length / 4);
+  imageLumCache.set(img, lum);
+  return lum;
 }
 
-// Get luminance from current background state
-export function getBackgroundLuminance(state) {
-  const bg = state.background;
+// Get luminance for a background object ({ type, ... })
+export function getBackgroundLuminance(bg) {
   if (!bg) return 0.5;
 
   if (bg.type === "system") {
@@ -78,14 +82,14 @@ export function getBackgroundLuminance(state) {
   return 0.5;
 }
 
-// Draw the canvas background
-export function drawBackground(ctx, W, H, state) {
-  const bg = state.background;
+// Draw the canvas background. opts = { background, backdrop, emojiSize, guideRings }
+export function drawBackground(ctx, W, H, opts) {
+  const bg = opts.background;
   const cx = W/2, cy = H/2;
-  const maxR = W/2 - state.emojiSize*0.9;
+  const maxR = W/2 - opts.emojiSize*0.9;
 
   // Determine if we should use dark colors
-  const lum = getBackgroundLuminance(state);
+  const lum = getBackgroundLuminance(bg);
   const dark = lum < 0.5; // If average luminance is low, we're dark
 
   // Draw background
@@ -122,7 +126,7 @@ export function drawBackground(ctx, W, H, state) {
   }
 
   // Draw backdrop (soft glow or rings) on top
-  if (state.backdrop === "soft"){
+  if (opts.backdrop === "soft"){
     const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,maxR*1.05);
     if (dark){
       grad.addColorStop(0, "rgba(139,107,255,0.16)");
@@ -135,11 +139,11 @@ export function drawBackground(ctx, W, H, state) {
     ctx.beginPath();
     ctx.arc(cx,cy,maxR*1.05,0,Math.PI*2);
     ctx.fill();
-  } else if (state.backdrop === "rings"){
+  } else if (opts.backdrop === "rings"){
     ctx.strokeStyle = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
     ctx.lineWidth = 1;
-    for (let i=1; i<=state.rings; i++){
-      const r = (i/state.rings) * maxR;
+    for (let i=1; i<=opts.guideRings; i++){
+      const r = (i/opts.guideRings) * maxR;
       ctx.beginPath();
       ctx.arc(cx,cy,r,0,Math.PI*2);
       ctx.stroke();
