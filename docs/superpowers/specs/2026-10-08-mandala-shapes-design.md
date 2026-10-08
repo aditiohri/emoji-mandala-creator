@@ -1,6 +1,6 @@
 # Customizable mandala shapes — design
 
-Status: approved (2026-10-08), revised after two reviews. Tracker: `ROADMAP.md` item 1.
+Status: approved (2026-10-08), revised after two reviews; toggles decided 2026-10-08 (§1, §4). Tracker: `ROADMAP.md` item 1.
 Each slice in §6 gets its own implementation plan.
 
 ## 1. Intent
@@ -33,8 +33,9 @@ shape and every combination of palette and control values:
 | Picking a shape | Thumbnail strip of live previews (palette-coloured, shape defaults), like the background swatches. Shuffle also picks a random shape. |
 | Switching shapes | Each shape remembers its own control values for the session; shared controls are global. |
 | Backdrop | *(revised 2026-10-08)* Visible guide lines are **dropped**: no "Guide rings", and shapes draw no guides. Shapes still lay emoji out along their underlying geometry (rings, petals, triangles, grid); only the drawn lines go. The Backdrop select goes away; **"Soft glow"** becomes an on/off switch in the Background section. |
-| Face outward | Shared. Every placement carries a `heading`; the renderer applies it. |
-| Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. |
+| Face outward | Shared. Every placement carries a `heading`; the renderer applies it: the glyph's top points away from the center. *(Toggles decision, 2026-10-08)* Kept as is: once colouring is symmetric (slice 2), directional emoji (🦋🌊🔥🌙) form a clear starburst at defaults. Round emoji (✨🌸💠) show little change, and that is accepted. |
+| Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. *(Toggles decision, 2026-10-08)* For rings, the visible effect is the half-step offset of every other ring (straight spokes → staggered lattice); the direction reversal only shows with p = 3. So rings keep the behaviour but the switch is renamed **"Stagger alternate rings"**; the state key stays `alternate`. Options judged by screenshot and rejected: a progressive twist (spiral arms; overlaps the spiral shape) and swapping colours on alternate rings (hard to tell from off). |
+| Toggle switches | *(2026-10-08)* Every switch must toggle when its **visible pill** is clicked with a mouse or tapped, not only via its text label. Today's `<div class="switch">` around a 0×0 checkbox fails this; switches become `<label class="switch">`. Verified with real Playwright locator clicks on the pill, never JS `checked =`/`click()`. |
 | Build order | Engine → pattern/palette rules → spiral (+ strip, per-shape controls) → lotus → yantra → kolam. |
 
 **Assumptions (not stated by the user):** the chosen shape and its settings
@@ -103,7 +104,7 @@ export default {
     { key: "spacing",  label: "Ring spacing",      min: 50, max: 150, step: 1, default: 100,
       shuffle: [60, 149], format: v => (v/100).toFixed(1) + "×" },
   ],
-  alternate: { label: "Alternate ring direction", default: true }, // or null
+  alternate: { label: "Stagger alternate rings", default: true }, // or null
   maxEmoji: 6,                      // cap on distinct emoji for this shape (≤ 6)
   overlap: 0,                       // allowed overlap fraction, 0–0.5
   layout(params) { /* pure */ return { placements, groups }; },
@@ -273,8 +274,12 @@ is saved per device next to the background (`localStorage` key
   Generated ids are `shape-<key>` / `shape-<key>-val` so they never clash
   with static ids. Emoji size, Rotation, Center, Face outward and
   Background stay static.
+- **Toggle switches** — each is a `<label class="switch">` wrapping its
+  checkbox and pill, so clicking the visible pill toggles it (see §1). The
+  text label keeps working too.
 - **Alternate toggle** — label from `shape.alternate.label`; row hidden
-  when the shape declares `null`.
+  when the shape declares `null`. Slice 2 renames the static label to
+  "Stagger alternate rings"; slice 3 makes it come from the shape.
 - **Palette cue** — chips in `used` are normal, the rest dimmed; a caption
   reads "Concentric rings is using 4 of your 9 emoji — drag one forward to
   use it" (or "...using all 3 of your emoji"). Updates whenever `used`
@@ -308,7 +313,7 @@ when `centerMode` is `"emoji"`, and absent when `"empty"`.
 `k·ringSpacing`, `ringSpacing = (spacing/100)·(radius/rings)`, emitted in
 order `s = 0..symmetry-1` at angle `dir·2πs/symmetry + rot`, where
 `dir = -1` and `rot = π/symmetry` on even rings when Alternate is on, else
-`dir = 1, rot = 0`. Placement `index = s` (emit order, not angular
+`dir = 1, rot = 0` (Alternate is labelled "Stagger alternate rings", §1). Placement `index = s` (emit order, not angular
 order — with `dir = -1` they differ). Base scale `1 - (k-1)·0.03`
 (clamped to the fit floor from slice 2). Heading = angle. Groups:
 center, then one `cycle` group per ring (`reverse` on even rings when
@@ -397,8 +402,11 @@ subagents, screenshot-verified by me before merge, and ticked off in
    rings uses them; `assignLegacy` deleted; guide rings and the Backdrop
    select removed, Soft glow becomes a switch in the Background section
    (`state.glow`, `guideRings` and `layout.guides` deleted); `renderTo`
-   returns `used`; palette cue; drag-to-reorder. Visible change: rings
-   become seam-free and never overlap. The sweep test regains "every
+   returns `used`; palette cue; drag-to-reorder. It also folds in the
+   ROADMAP "Toggles" item: switches become clickable on the pill (§1, §4)
+   and the rings Alternate switch is renamed "Stagger alternate rings".
+   Visible change: rings become seam-free and never overlap, and both
+   toggles make a change visible at a glance at default settings. The sweep test regains "every
    placement within `radius + emojiSize`" (possible once spacing is
    clamped).
 3. **Phyllotaxis spiral + shape strip + generated per-shape controls +
@@ -422,7 +430,9 @@ subagents, screenshot-verified by me before merge, and ticked off in
     port deliberately keeps today's overlaps), **for every pair of
     placements** distance ≥ `0.95 · emojiSize · (a+b)/2 · (1-overlap)`
     and every `scale ≥ minFont/emojiSize`.
-- **Browser** via `~/.tools/playwright` scripts: no console errors;
+- **Browser** via `~/.tools/playwright` scripts: every control is driven by
+  **real Playwright locator clicks/drags on the visible element** (setting
+  `checked`/`value` from JS hides unclickable controls); no console errors;
   screenshots of each shape at defaults and slider extremes, desktop and
   phone width; drag-to-reorder by mouse and by touch emulation; I look at
   every screenshot myself. Slice 1 adds a pixel-diff script against a
