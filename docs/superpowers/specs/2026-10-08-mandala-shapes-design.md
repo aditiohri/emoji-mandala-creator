@@ -144,7 +144,7 @@ groups: [{ size, kind, slot?, reverse?, ring? }]
 //   kind:    "cycle" (repeating pattern) | "solid" (one emoji)
 //   slot:    optional fixed palette slot (role), e.g. bindu -> 0
 //   reverse: run the pattern the other way (used by Alternate)
-//   ring:    rings shape only, for the slice-1 legacy assigner
+//   ring:    slice 1 only (legacy assigner); removed in slice 2
 ```
 
 (Slice 1's `rings.layout` also returns `guides`; slice 2 removes it.)
@@ -172,7 +172,8 @@ groups: [{ size, kind, slot?, reverse?, ring? }]
 Guarantees criteria 1, 3 and 4 by construction; unit-tested directly.
 
 **Adjacency:** for groups without a declared `slot`, consecutive groups
-differ whenever U ≥ 2. Shapes that declare slots must give consecutive
+differ whenever U ≥ 2. "Differ" means a different base emoji: with U = 2,
+two period-2 rings share both emoji, out of phase. Shapes that declare slots must give consecutive
 groups in `groups[]` (ordered inside-out) different slots, so they differ
 whenever U ≥ `maxEmoji`.
 
@@ -191,16 +192,24 @@ to it too. "Need" for two placements of scale `a`, `b` is
 (scale 1.05); a group next to it uses need `emojiSize·(1.05 + a)/2·(1-overlap)`.
 In the bullets below, `MIN_SCALE` means this `floor`.
 
-- **`fitRing({ r, count, emojiPx, overlap })` → `{ count, scale }`** for an
+`lib.js` exports `MIN_SCALE`, `fitFloor(emojiSize, minFont)` (the floor
+above), `chord(r, count)`, `fitRing` and `fitGap`; both fit helpers take the
+`floor` explicitly.
+
+- **`fitRing({ r, count, emojiPx, overlap, floor })` → `{ count, scale }`** for an
   evenly spaced ring. Neighbour distance is the chord `2r·sin(π/count)`.
   `scale = min(1, chord / (emojiPx·(1-overlap)))`. If `scale < MIN_SCALE`:
   set `scale = MIN_SCALE` and `count` = the largest `m ≤ count` whose chord
   `2r·sin(π/m) ≥ MIN_SCALE·emojiPx·(1-overlap)`; the shape then places `m`
   positions **evenly re-spaced** around the ring (not a subset), so the
-  ring stays symmetric for any `m`. If `m < 3` the group is dropped.
-- **`fitGap({ gap, emojiPx, overlap })` → scale** — the same shrink for a
-  radial gap between neighbouring groups (and between ring 1 and the center
-  emoji). A group's final scale is `min(ringFit, gapFit to inner neighbour,
+  ring stays symmetric for any `m`. If `m < 3`, `count` is 0 and the group is
+  dropped.
+- **`fitGap({ gap, emojiPx, overlap, other?, floor })` → scale** — the same
+  shrink for a radial gap between neighbouring groups: the largest `s ≤ 1`
+  with `emojiPx·(s + other)/2·(1-overlap) ≤ gap`, where `other` is the
+  neighbour's scale (omitted = the same `s`; the center passes 1.05).
+  Clamped to `≥ floor`; the caller moves groups apart when the gap fails even
+  at the floor. A group's final scale is `min(ringFit, gapFit to inner neighbour,
   gapFit to outer neighbour)`.
 - When a radial gap is too small even at `MIN_SCALE`, each shape resolves it
   as described in §5 (rings push outward, spiral drops inner seeds, kolam
@@ -323,9 +332,16 @@ Alternate is on). Fit (slice 2+): `fitRing` per ring, `fitGap` against
 beyond `radius` are dropped. From slice 2, `ringSpacing` is first
 **clamped** so the outer ring sits within `radius`:
 `ringSpacing = min((spacing/100)·(radius/rings), radius/rings)` (decided
-2026-10-08; today spacing > 1.0× pushes outer rings off the canvas). The
-slice 2 plan must decide what spacing > 1.0× then means, so the slider has
-no dead range. "Empty" removes the center emoji. `maxEmoji` 6.
+2026-10-08; today spacing > 1.0× pushes outer rings off the canvas).
+*(Decided in the slice 2 plan, 2026-10-08)* With `f = spacing/100`, the
+radial step is `min(f, 2 - f)·radius/rings`: 1.0× spreads rings evenly to
+the edge, below 1.0× packs them toward the center (as today), above 1.0×
+packs them toward the **edge**, leaving an open center (the outer ring stays
+on `radius`, ring 1 sits at `radius - (rings-1)·step`). So the slider has no
+dead range at roomy settings; when rings are crowded at the floor scale,
+spacing has no room left to act, and that is accepted. Ring 1 vs the center:
+shrink ring 1 first (`fitGap` with `other: 1.05`), then push every ring out
+by the remaining shortfall. "Empty" removes the center emoji. `maxEmoji` 6.
 
 **Phyllotaxis spiral** — seed `i = 1..n`: angle `i·divergence`, radius
 `R·√(i/n)`, heading = angle. Controls: Seeds 40–300 (default 144),
