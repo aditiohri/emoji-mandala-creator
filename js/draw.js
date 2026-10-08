@@ -1,4 +1,4 @@
-import { state, DEFAULT_PALETTE, seededPick } from "./state.js";
+import { state, DEFAULT_PALETTE } from "./state.js";
 import { drawBackground } from "./backgrounds.js";
 
 export let canvas = null;
@@ -48,6 +48,7 @@ export function draw(){
   for (let ring=1; ring<=state.rings; ring++){
     const r = ring * ringSpacing;
     const dir = (state.alternate && ring % 2 === 0) ? -1 : 1;
+    const ringPatternOffset = (ring * 31) % palette.length;
     const ringRotOffset = (state.rotation * Math.PI/180) + (state.alternate && ring % 2 === 0 ? Math.PI/state.symmetry : 0);
     const ringSize = state.emojiSize * (1 - (ring-1)*0.03);
     ctx.font = Math.max(14, ringSize) + "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
@@ -56,7 +57,9 @@ export function draw(){
       const angle = dir * (s / state.symmetry) * Math.PI*2 + ringRotOffset;
       const x = cx + Math.cos(angle) * r;
       const y = cy + Math.sin(angle) * r;
-      const emoji = seededPick(ring*31 + s*7, palette);
+      // Cycle the palette by position so ring direction is visible; each ring
+      // starts at a different offset. Alternate rings run the other way via `dir`.
+      const emoji = palette[(ringPatternOffset + s) % palette.length];
 
       ctx.save();
       ctx.translate(x, y);
