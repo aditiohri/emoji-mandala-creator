@@ -12,7 +12,7 @@ export default {
     { key: "spacing",  label: "Ring spacing",      min: 50, max: 150, step: 1, default: 100,
       shuffle: [60, 149], format: v => (v/100).toFixed(1) + "×" },
   ],
-  alternate: { label: "Alternate ring direction", default: true },
+  alternate: { label: "Stagger alternate rings", default: true },
   maxEmoji: 6,
   overlap: 0,
   layout({ rings, symmetry, spacing, alternate, centerMode, radius }){

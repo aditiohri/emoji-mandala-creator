@@ -22,7 +22,7 @@ test("rings controls match the spec", () => {
   assert.deepEqual(rings.controls.map(c => [c.key, c.min, c.max, c.step, c.default]),
     [["rings", 1, 12, 1, 6], ["symmetry", 3, 24, 1, 10], ["spacing", 50, 150, 1, 100]]);
   assert.equal(rings.controls[2].format(100), "1.0×");
-  assert.deepEqual(rings.alternate, { label: "Alternate ring direction", default: true });
+  assert.deepEqual(rings.alternate, { label: "Stagger alternate rings", default: true });
   assert.equal(rings.maxEmoji, 6);
   assert.equal(rings.overlap, 0);
 });

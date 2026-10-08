@@ -275,6 +275,7 @@ select{
   font-weight:500;
 }
 .switch{
+  display:inline-block;
   position:relative;
   width:36px;
   height:20px;
@@ -301,6 +302,7 @@ select{
 }
 .switch input:checked + .slider-pill{ background:var(--coral); }
 .switch input:checked + .slider-pill::before{ transform:translateX(16px); }
+.switch input:focus-visible + .slider-pill{ outline:2px solid var(--coral); outline-offset:2px; }
 
 .footer-actions{
   display:flex;
