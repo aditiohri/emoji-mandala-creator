@@ -184,6 +184,10 @@ input[type="range"]{
   min-height:34px;
 }
 .palette-chip{
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  cursor:grab;
   display:inline-flex;
   align-items:center;
   gap:4px;
@@ -211,6 +215,14 @@ input[type="range"]{
   color:var(--coral);
 }
 .palette-chip.unused{ opacity:0.4; }
+.palette-chip.dragging{
+  position:relative;
+  z-index:2;
+  cursor:grabbing;
+  box-shadow:0 4px 12px rgba(0,0,0,0.18);
+}
+.palette-chip.drop-target{ outline:2px dashed var(--coral); outline-offset:2px; }
+.palette-chip:focus-visible{ outline:2px solid var(--coral); outline-offset:2px; }
 .palette-cue{ margin:6px 0 0; }
 
 .custom-row{

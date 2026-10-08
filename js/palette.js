@@ -43,6 +43,7 @@ export function renderPaletteChips(onChipChange){
       if (onChipChange) onChipChange();
     });
     chip.appendChild(remove);
+    attachReorder(chip, i, onChipChange);
     wrap.appendChild(chip);
   });
 }
@@ -69,6 +70,13 @@ export function renderEmojiGrid(onChipChange){
   });
 }
 
+// Move arr[from] to position `to` (in place); returns arr.
+export function moveItem(arr, from, to){
+  const [x] = arr.splice(from, 1);
+  arr.splice(to, 0, x);
+  return arr;
+}
+
 // Caption under the palette (spec §4 "Palette cue").
 export function cueText(label, used, total){
   if (used >= total) return total === 1
@@ -83,6 +91,73 @@ export function updatePaletteCue(used, label){
     chip.classList.toggle("unused", !used.has(i));
   });
   document.getElementById("paletteCue").textContent = cueText(label, used.size, state.palette.length);
+}
+
+const DRAG_START_PX = 6;
+
+function commitMove(from, to, onChipChange){
+  moveItem(state.palette, from, to);
+  renderPaletteChips(onChipChange);
+  if (onChipChange) onChipChange();
+}
+
+// Drag (mouse or touch) and ←/→ keys reorder the palette.
+function attachReorder(chip, i, onChipChange){
+  chip.tabIndex = 0;
+  chip.addEventListener("keydown", e => {
+    const to = e.key === "ArrowLeft" ? i - 1 : e.key === "ArrowRight" ? i + 1 : null;
+    if (to === null) return;
+    e.preventDefault();
+    if (to < 0 || to >= state.palette.length) return;
+    commitMove(i, to, onChipChange);
+    document.querySelectorAll("#paletteChips .palette-chip")[to].focus();
+  });
+  chip.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    const start = { x: e.clientX, y: e.clientY };
+    const chips = [...chip.parentElement.children];
+    const centers = chips.map(c => {
+      const r = c.getBoundingClientRect();
+      return { x: r.left + r.width/2, y: r.top + r.height/2 };
+    });
+    let dragging = false, target = i;
+    const move = ev => {
+      if (ev.pointerId !== e.pointerId) return;
+      const dx = ev.clientX - start.x, dy = ev.clientY - start.y;
+      if (!dragging){
+        if (Math.hypot(dx, dy) < DRAG_START_PX) return;
+        dragging = true;
+        // Capture only now, so a tap on × still reaches the × button.
+        chip.setPointerCapture(ev.pointerId);
+        chip.classList.add("dragging");
+      }
+      chip.style.transform = `translate(${dx}px, ${dy}px)`;
+      let best = Infinity;
+      centers.forEach((c, j) => {
+        const d = Math.hypot(ev.clientX - c.x, ev.clientY - c.y);
+        if (d < best){ best = d; target = j; }
+      });
+      chips.forEach((c, j) => c.classList.toggle("drop-target", j === target && j !== i));
+    };
+    const end = ev => {
+      if (ev.pointerId !== e.pointerId) return;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+      if (!dragging) return;
+      // Reorder only on pointerup: renderPaletteChips rebuilds the list.
+      if (ev.type === "pointerup" && target !== i){
+        commitMove(i, target, onChipChange);
+      } else {
+        chip.classList.remove("dragging");
+        chip.style.transform = "";
+        chips.forEach(c => c.classList.remove("drop-target"));
+      }
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", end);
+    window.addEventListener("pointercancel", end);
+  });
 }
 
 export function setupCustomEmojiInput(onInput){
