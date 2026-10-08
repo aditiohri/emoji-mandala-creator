@@ -1,4 +1,4 @@
-import { state, PICKER_EMOJI } from "./state.js";
+import { state, PICKER_EMOJI, DEFAULT_PALETTE } from "./state.js";
 import { initCanvas, draw } from "./draw.js";
 import {
   renderPaletteChips,
@@ -11,8 +11,22 @@ import {
   setupSaveButton,
   setupShareButton
 } from "./export.js";
+import { recordUse, topEmoji } from "./usage.js";
 
 initCanvas();
+
+// Initialize palette from usage data if available
+const usedEmoji = topEmoji(8);
+if (usedEmoji && usedEmoji.length > 0) {
+  state.palette = usedEmoji;
+  // Pad with DEFAULT_PALETTE without duplicates
+  for (const e of DEFAULT_PALETTE) {
+    if (state.palette.length >= 8) break;
+    if (!state.palette.includes(e)) {
+      state.palette.push(e);
+    }
+  }
+}
 
 // Setup palette UI
 renderPaletteChips(draw);
@@ -35,6 +49,7 @@ emojiPicker.addEventListener("emoji-click", (e) => {
   const emoji = e.detail && e.detail.unicode;
   if (!emoji) return;
   state.palette.push(emoji);
+  recordUse(emoji);
   renderPaletteChips(draw);
   syncGridActiveStates();
   draw();

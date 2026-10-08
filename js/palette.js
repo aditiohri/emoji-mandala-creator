@@ -1,4 +1,5 @@
 import { state, PICKER_EMOJI } from "./state.js";
+import { recordUse } from "./usage.js";
 
 export function splitEmojiClusters(val){
   const chars = Array.from(val);
@@ -58,6 +59,7 @@ export function renderEmojiGrid(onChipChange){
         if (state.palette.length > 1) state.palette.splice(i,1);
       } else {
         state.palette.push(e);
+        recordUse(e);
       }
       chip.classList.toggle("active", state.palette.includes(e));
       renderPaletteChips(onChipChange);
@@ -76,7 +78,10 @@ export function setupCustomEmojiInput(onInput){
       const val = customInput.value.trim();
       customInput.value = "";
       if (!val) return;
-      splitEmojiClusters(val).forEach(c => state.palette.push(c));
+      splitEmojiClusters(val).forEach(c => {
+        state.palette.push(c);
+        recordUse(c);
+      });
       renderPaletteChips(onInput);
       syncGridActiveStates();
       onInput();
