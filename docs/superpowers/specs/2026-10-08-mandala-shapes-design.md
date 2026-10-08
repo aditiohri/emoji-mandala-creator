@@ -1,6 +1,6 @@
 # Customizable mandala shapes — design
 
-Status: revised after spec review (2026-10-08). Tracker: `ROADMAP.md` item 1.
+Status: approved (2026-10-08), revised after two reviews. Tracker: `ROADMAP.md` item 1.
 Each slice in §6 gets its own implementation plan.
 
 ## 1. Intent
@@ -121,7 +121,7 @@ export default {
 | `centerMode` | `"emoji"` \| `"empty"` — each shape says in §5 what "empty" removes |
 | `radius` | px; usable radius, today's `maxR = W/2 - emojiSize*0.9` |
 | `emojiSize` | px; base glyph size |
-| `fit` | boolean, default true; slice 1 passes false for the legacy port |
+| `minFont` | px; the renderer's font floor. From slice 2, every emitted `scale` is ≥ `minFont/emojiSize`, so the renderer's clamp never makes a glyph bigger than the fit assumed |
 
 Coordinates are px relative to the canvas center, unrotated. Global
 **rotation is applied by the renderer**, so shapes never handle it.
@@ -171,15 +171,25 @@ guides: [{ type: "circle", r } | { type: "path", points: [[x,y],...], closed }
 
 Guarantees criteria 1, 3 and 4 by construction; unit-tested directly.
 
-A **legacy mode** (`assignLegacy`) exists only in slice 1 to reproduce
-today's colouring exactly: center → `palette[0]`; ring group →
-`palette[((ring*31) % len + index) % len]` over the whole palette. Slice 2
-deletes it.
+**Adjacency:** for groups without a declared `slot`, consecutive groups
+differ whenever U ≥ 2. Shapes that declare slots must give consecutive
+groups in `groups[]` (ordered inside-out) different slots, so they differ
+whenever U ≥ `maxEmoji`.
+
+A **legacy mode** `assignLegacy(groups, palette)` → `{ emojiFor, used }`
+(same return shape, so it swaps in directly) exists only in slice 1 to
+reproduce today's colouring exactly: center → `palette[0]`; ring group →
+`palette[((ring*31) % len + index) % len]` over the whole palette, where
+`index = s`, the emit order. Slice 2 deletes it.
 
 ### Fitting (`js/shapes/lib.js`)
 
-The floor is `MIN_SCALE = 0.55`. "Need" for two placements of scale `a`, `b`
-is `emojiSize · (a + b)/2 · (1 - overlap)`.
+The floor is `floor = max(MIN_SCALE, minFont/emojiSize)` with
+`MIN_SCALE = 0.55`; base scales (e.g. rings' per-ring shrink) are clamped
+to it too. "Need" for two placements of scale `a`, `b` is
+`emojiSize · (a + b)/2 · (1 - overlap)`. The center emoji never shrinks
+(scale 1.05); a group next to it uses need `emojiSize·(1.05 + a)/2·(1-overlap)`.
+In the bullets below, `MIN_SCALE` means this `floor`.
 
 - **`fitRing({ r, count, emojiPx, overlap })` → `{ count, scale }`** for an
   evenly spaced ring. Neighbour distance is the chord `2r·sin(π/count)`.
@@ -201,24 +211,34 @@ so any shape-specific gap it misses fails a test.
 
 ### Renderer (`js/draw.js`)
 
-`renderTo(ctx, W, opts)` where `opts = { shape, params, palette,
+`renderTo(ctx, W, opts)` draws on a **square** canvas of side `W` (all
+canvases here are square), where `opts = { shape, params, palette,
 background, backdrop, emojiSize, rotation, centerMode, faceOutward,
-minFont }`:
+minFont }`. `opts.rotation` is in **degrees** (as in `state`) and is
+converted to radians once, `rot = rotation·π/180`.
 
-1. `drawBackground(ctx, W, H, { background, backdrop, emojiSize })` →
-   `dark` (fill + soft glow). Image-background luminance is cached in a
-   `WeakMap` keyed by the image element, since thumbnails redraw often.
-2. `layout = shape.layout({...params, centerMode, radius, emojiSize})`.
-3. If `backdrop === "guides"`: stroke `layout.guides` rotated by
-   `rotation`, in today's faint style (`rgba(255,255,255,0.06)` dark /
-   `rgba(0,0,0,0.06)` light, 1px).
-4. `assignEmoji(...)`.
-5. For each placement: rotate `(x, y)` by `rotation`; font size
-   `max(minFont, emojiSize·scale)`; if `faceOutward` and `heading !== null`
-   rotate the glyph by `heading + rotation + π/2`; `fillText`.
+1. `ctx.clearRect(0, 0, W, W)`; `drawBackground(ctx, W, W, { background,
+   backdrop, emojiSize })` → `dark` (fill + soft glow). Image-background
+   luminance is cached in a `WeakMap` keyed by the image element, since
+   thumbnails redraw often. *Slice 1 only:* the options also carry
+   `guideRings` (the rings count) so the existing guide circles keep
+   drawing at `(i/rings)·maxR` for backdrop value `"rings"`.
+2. `layout = shape.layout({...params, centerMode, radius, emojiSize, minFont})`.
+3. *From slice 2:* if `backdrop === "guides"`, stroke `layout.guides`
+   rotated by `rot`, in today's faint style (`rgba(255,255,255,0.06)` dark
+   / `rgba(0,0,0,0.06)` light, 1px). Slice 1 ignores `layout.guides`.
+4. `assignEmoji(...)` (slice 1: `assignLegacy(...)`).
+5. Set `textAlign = "center"`, `textBaseline = "middle"`,
+   `fillStyle = dark ? "#f2ecdd" : "#241c38"`. Draw placements **in array
+   order** (center first, then rings in emit order). For each: font
+   `max(minFont, emojiSize·scale) + "px 'Apple Color Emoji','Segoe UI
+   Emoji','Noto Color Emoji',sans-serif"`; translate to `(x, y)` rotated by
+   `rot`; if `faceOutward` and `heading !== null`, rotate the glyph by
+   `heading + rot + π/2`; `fillText(emoji, 0, 0)`.
 
 `draw()` keeps its signature and callers: it calls `renderTo` on the main
-canvas with values from `state` and `minFont = 14`.
+canvas with values from `state` and `minFont = 14`. `draw.js` keeps
+exporting `canvas` and `ctx` (`export.js:1` imports `canvas`).
 
 **Thumbnails** call `renderTo` on a tile canvas of width `W` with
 `k = W / canvas.width`: `emojiSize = 44·k`, `minFont = 14·k`, `rotation 0`,
@@ -237,7 +257,9 @@ state.shapeParams = { rings: { rings: 6, symmetry: 10, spacing: 100, alternate: 
 
 `state.rings / symmetry / spacing / alternate` are removed; every reader
 (`draw.js`, `backgrounds.js:141`, `main.js` slider bindings and Shuffle)
-moves to `state.shapeParams.rings` in slice 1.
+moves to `state.shapeParams.rings` in slice 1. `backdrop` keeps today's
+values (`"none" | "soft" | "rings"`) in slice 1; slice 2 renames `"rings"`
+to `"guides"` in `index.html` and code together.
 
 ## 4. UI
 
@@ -284,7 +306,9 @@ when `centerMode` is `"emoji"`, and absent when `"empty"`.
 `k·ringSpacing`, `ringSpacing = (spacing/100)·(radius/rings)`, emitted in
 order `s = 0..symmetry-1` at angle `dir·2πs/symmetry + rot`, where
 `dir = -1` and `rot = π/symmetry` on even rings when Alternate is on, else
-`dir = 1, rot = 0`. Base scale `1 - (k-1)·0.03`. Heading = angle. Groups:
+`dir = 1, rot = 0`. Placement `index = s` (emit order, not angular
+order — with `dir = -1` they differ). Base scale `1 - (k-1)·0.03`
+(clamped to the fit floor from slice 2). Heading = angle. Groups:
 center, then one `cycle` group per ring (`reverse` on even rings when
 Alternate is on). Fit (slice 2+): `fitRing` per ring, `fitGap` against
 `ringSpacing` (and ring 1 against the center); if the radial gap fails at
@@ -322,8 +346,11 @@ layers offset by half a petal. Guides: petal outlines (`lib.petalCurve`).
   group of size 6 indexed by star arm — so with p = 2 the up and down
   triangles take different emoji. Its 6 crossing points form a second
   group (slot 2, size 6). Nothing is placed on the inner hexagon's sides,
-  which keeps every point clear of the crossings. Nested pairs alternate
-  `reverse`;
+  which keeps every point clear of the crossings. Nested pairs **swap
+  slots** (odd pairs: star slot 2, crossings slot 1) so adjacent pairs
+  differ even with p = 2. Fit: edge points are spaced `segLen/(detail+1)`;
+  if that is under the need at the floor, lower `detail` (to 0) for that
+  hexagram, then drop inner hexagrams that still don't fit;
 - one lotus layer (slot 3) via `lib.petalCurve`, tips only;
 - bhupura square (slot 4, `solid`): emoji on the corners and evenly along
   each side, the same count per side, skipping the gate opening;
@@ -351,13 +378,16 @@ subagents, screenshot-verified by me before merge, and ticked off in
 `ROADMAP.md`.
 
 1. **Engine (no visible change).** `js/shapes/index.js`, `lib.js` (`polar`
-   only), `rings.js` (with `fit: false` path), `pattern.js` with
-   `assignLegacy`, `renderTo`/`draw` refactor, `backgrounds.js` taking
-   explicit options. State moves to `state.shapeParams.rings`, including
-   **`backgrounds.js:141`** (guide circles stay there, unchanged, until
-   slice 2) and **`main.js:93,97,108-110,119-135`** (slider bindings and
-   Shuffle). Center emoji `heading: null`. Static sliders in `index.html`
-   are untouched. Done when screenshots match a pre-refactor baseline at
+   only), `rings.js` (today's geometry, no fitting), `pattern.js` with
+   `assignLegacy` only, `renderTo`/`draw` refactor, `backgrounds.js` taking
+   explicit options (plus `guideRings`, see Renderer step 1). State moves
+   to `state.shapeParams.rings`, including **`backgrounds.js:141`** (guide
+   circles stay there, unchanged, until slice 2) and
+   **`main.js:93-94, 97, 108-110, 119-135`** (slider bindings, the
+   Alternate listener, Shuffle). `bindRange` writes `state[key]`, so it
+   needs a variant that writes `state.shapeParams.rings[key]`. Center
+   emoji `heading: null`. `index.html` is untouched (Backdrop value stays
+   `"rings"`). Done when screenshots match a pre-refactor baseline at
    ≥ 4 combinations (incl. Alternate on/off, Face outward on, rotation ≠ 0,
    a 3-emoji palette): fewer than 0.5% of pixels differ by more than
    8/255.
@@ -375,15 +405,17 @@ subagents, screenshot-verified by me before merge, and ticked off in
 
 - **Unit (`node --test`)**, `node:test` + `node:assert`, no dependencies:
   - `pattern`: only `use` emoji appear; in a `cycle` group
-    `emoji(i) === emoji(i + p)` and `size % p === 0`; groups `g` and `g+1`
-    differ when U ≥ 2; `reverse` reverses for p = 3; `used` lists exactly the indices drawn;
+    `emoji(i) === emoji(i + p)` and `size % p === 0`; adjacency as stated
+    in §3 (slot-less groups when U ≥ 2, slotted groups when U ≥ maxEmoji); `reverse` reverses for p = 3; `used` lists exactly the indices drawn;
     U = 1 and size = 1 work; deterministic.
   - `fitRing` / `fitGap`: shrink, then even re-spacing; drop below 3.
   - **Sweep every shape** over a grid of its control ranges × centerMode ×
     alternate × emojiSize {20, 44, 80}: no NaN; every placement within
     `radius + emojiSize`; each group's `size` matches the distinct indices
-    emitted and they cover `0..size-1`; and **for every pair of
-    placements** distance ≥ `0.95 · emojiSize · (a+b)/2 · (1-overlap)`.
+    emitted and they cover `0..size-1`; and, **from slice 2** (slice 1's
+    port deliberately keeps today's overlaps), **for every pair of
+    placements** distance ≥ `0.95 · emojiSize · (a+b)/2 · (1-overlap)`
+    and every `scale ≥ minFont/emojiSize`.
 - **Browser** via `~/.tools/playwright` scripts: no console errors;
   screenshots of each shape at defaults and slider extremes, desktop and
   phone width; drag-to-reorder by mouse and by touch emulation; I look at

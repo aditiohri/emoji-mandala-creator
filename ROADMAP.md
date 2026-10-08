@@ -18,29 +18,27 @@ desktop save flow, a separate Share button, and (October 2026):
 
 Still open, roughly in the order we'd tackle them:
 
-## 1. Customizable mandala shapes (next; spec in review)
+## 1. Customizable mandala shapes (in progress)
 
-Spec: `docs/superpowers/specs/2026-10-08-mandala-shapes-design.md`.
+Spec (approved 2026-10-08, reviewed twice):
+`docs/superpowers/specs/2026-10-08-mandala-shapes-design.md`. Goal: "a
+visible, distinct, elegant pattern every time, no matter what the user
+does." Each slice gets its own plan in `docs/superpowers/plans/`.
 
-Today `draw()` hardcodes concentric rings of evenly spaced emoji. Many
-traditional mandala families don't fit that: yantras (interlocking
-triangles, lotus petals, nested squares with gates), rangolis (dot grids
-and kolam-style lattices, petal motifs), flower/phyllotaxis spirals,
-rosettes, etc.
+- [ ] **Slice 1 — engine, no visible change** (next: write its plan).
+      Shape interface, rings port, legacy colouring, `renderTo`,
+      `state.shapeParams.rings`; pixel-diff against a pre-refactor baseline.
+- [ ] Slice 2 — symmetric emoji assignment, fitting, shape guides,
+      palette "using K of N" cue, drag-to-reorder.
+- [ ] Slice 3 — phyllotaxis spiral, shape thumbnail strip, generated
+      per-shape controls, Shuffle picks a shape.
+- [ ] Slice 4 — lotus / rosette.
+- [ ] Slice 5 — yantra.
+- [ ] Slice 6 — kolam / rangoli lattice.
 
-Direction (to be confirmed in the brainstorm/spec, not decided):
-
-- A "geometry" abstraction: a shape takes the current controls (rings,
-  symmetry, spacing, rotation, ...) and returns a list of placements
-  `{x, y, rotation, scale, ring/group}`; `draw()` just renders them.
-  Today's behaviour becomes the first shape ("Concentric rings").
-- One file per shape under `js/shapes/`, behind a shared interface, so
-  shapes can be added one at a time.
-- Decide how existing controls map onto shapes that don't have "rings",
-  how shapes interact with backgrounds/backdrops (e.g. a shape could
-  also draw guide lines), and how alternate/face-outward generalize.
-- Build in slices: spec -> interface + concentric-rings port -> one new
-  shape (e.g. phyllotaxis spiral) -> more.
+Models: Opus writes plans and reviews; Sonnet implements slices 1–3;
+Haiku slices 4–6 (escalate if it struggles). Screenshots are checked by
+the orchestrating session before each merge.
 
 ## 2. Small follow-ups
 
