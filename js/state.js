@@ -18,7 +18,8 @@ export const state = {
   alternate: true,
   faceOutward: false,
   backdrop: "soft",
-  zoom: 100
+  zoom: 100,
+  background: { type: "system" }
 };
 
 export function seededPick(seedNum, arr){

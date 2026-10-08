@@ -13,16 +13,8 @@ export function draw(){
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0,0,W,H);
 
-  // background fill
-  const isDark = matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
-  const rootTheme = document.documentElement.getAttribute("data-theme");
-  const dark = rootTheme === "dark" || (rootTheme !== "light" && isDark);
-  const bg = dark ? "#1a1526" : "#f7f0e2";
-  ctx.fillStyle = bg;
-  ctx.fillRect(0,0,W,H);
-
-  // backdrop
-  drawBackground(ctx, W, H, state, dark);
+  // Draw background and get whether it's dark for text color
+  const dark = drawBackground(ctx, W, H, state);
 
   const cx = W/2, cy = H/2;
   const maxR = W/2 - state.emojiSize*0.9;

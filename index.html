@@ -118,6 +118,40 @@
       </div>
 
       <div class="field">
+        <label class="group-label">Background</label>
+        <div class="bg-presets" id="bgPresets"></div>
+        <details class="bg-custom-section">
+          <summary>Custom</summary>
+          <div class="bg-custom-content">
+            <div class="custom-bg-row">
+              <label for="bgType">Type</label>
+              <select id="bgType">
+                <option value="solid">Solid color</option>
+                <option value="gradient">Gradient (2 colors)</option>
+              </select>
+            </div>
+            <div class="custom-bg-row">
+              <label for="bgColor1">Color 1</label>
+              <input type="color" id="bgColor1" value="#f7f0e2">
+            </div>
+            <div class="custom-bg-row" id="bgColor2Row" hidden>
+              <label for="bgColor2">Color 2</label>
+              <input type="color" id="bgColor2" value="#1a1526">
+            </div>
+            <div class="custom-bg-row" id="bgAngleRow" hidden>
+              <label for="bgAngle">Angle <span class="val" id="bgAngleVal">0°</span></label>
+              <input type="range" id="bgAngle" min="0" max="360" value="0">
+            </div>
+            <div class="custom-bg-row">
+              <label for="bgImage">Image</label>
+              <input type="file" id="bgImage" accept="image/*">
+            </div>
+            <button class="btn" id="bgAddCustom">Add to backgrounds</button>
+          </div>
+        </details>
+      </div>
+
+      <div class="field">
         <label class="group-label">Backdrop</label>
         <select id="backdrop">
           <option value="none">None</option>
