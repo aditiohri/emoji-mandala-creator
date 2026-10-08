@@ -9,13 +9,15 @@ export const PICKER_EMOJI = [
 
 export const state = {
   palette: [...DEFAULT_PALETTE],
-  rings: 6,
-  symmetry: 10,
+  shape: "rings",
+  // Per-shape control values (plus `alternate`). Other shapes are filled
+  // lazily from their control defaults on first visit (slice 3).
+  shapeParams: {
+    rings: { rings: 6, symmetry: 10, spacing: 100, alternate: true },
+  },
   rotation: 0,
   emojiSize: 44,
-  spacing: 100,
   centerMode: "emoji",
-  alternate: true,
   faceOutward: false,
   backdrop: "soft",
   zoom: 100,
