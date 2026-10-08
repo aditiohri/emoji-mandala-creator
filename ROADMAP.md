@@ -45,6 +45,28 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
       arrow keys on a focused × move its chip; drop slots go stale if the
       page scrolls mid-drag; duplicate check treats ❤ and ❤️ as different;
       rings' groups still declare a `reverse` that cancels out.
+- [ ] **Slice 2 follow-ups** (fresh whole-session review, 2026-10-08:
+      ready to push, nothing Critical/Important). Do the first before
+      slice 3; the rest can ride along with slice 3 or later.
+      - **Spec §5 rings text is stale**: it still gives the slice 1
+        formula (`k·ringSpacing`, angles over `symmetry`). Code uses the
+        `min(f, 2-f)` step plus an `inner` offset, and spaces each ring
+        over its *fitted* count `n`. Fix before new shapes copy it.
+      - **Crowded cores look jumbled** (e.g. rings 12, symmetry 24, size
+        80): inner rings get fitted to unrelated counts (some prime → one
+        emoji), so the center reads as a scatter, not a pattern. No
+        overlap, each ring symmetric, but not "elegant every time". Idea:
+        drop an inner ring instead of cutting it far below `symmetry`, or
+        prefer counts that divide `symmetry`. Judge crowded combos by eye,
+        not only defaults and extremes.
+      - **Phone: chips block page scroll** (`touch-action:none`). A swipe
+        starting on a chip doesn't scroll; the palette is 2+ rows on a
+        phone. Idea: allow vertical pan, start a drag on horizontal
+        movement or a short hold.
+      - **Browse gives no feedback** when the picked emoji is already in
+        the palette (now skipped silently).
+      - **Chips have no accessible name or reorder hint** (e.g.
+        `aria-label` "✨, position 1 of 8, arrow keys to move").
 - [ ] Slice 3 — phyllotaxis spiral, shape thumbnail strip, generated
       per-shape controls, Shuffle picks a shape.
 - [ ] Slice 4 — lotus / rosette.
