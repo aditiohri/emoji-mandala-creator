@@ -14,7 +14,10 @@ export function draw(){
   ctx.clearRect(0,0,W,H);
 
   // Draw background and get whether it's dark for text color
-  const dark = drawBackground(ctx, W, H, state);
+  const dark = drawBackground(ctx, W, H, {
+    background: state.background, backdrop: state.backdrop,
+    emojiSize: state.emojiSize, guideRings: state.rings,
+  });
 
   const cx = W/2, cy = H/2;
   const maxR = W/2 - state.emojiSize*0.9;
