@@ -32,7 +32,7 @@ shape and every combination of palette and control values:
 | Crowding | Per-shape slider ranges **plus** a fit rule (shrink, then re-space with fewer emoji) as a safety net. Shapes may opt into some overlap. |
 | Picking a shape | Thumbnail strip of live previews (palette-coloured, shape defaults), like the background swatches. Shuffle also picks a random shape. |
 | Switching shapes | Each shape remembers its own control values for the session; shared controls are global. |
-| Backdrop | *(revised 2026-10-08)* Guide lines are **dropped** entirely: no "Guide rings", and shapes draw no guides. The Backdrop select goes away; **"Soft glow"** becomes an on/off switch in the Background section. |
+| Backdrop | *(revised 2026-10-08)* Visible guide lines are **dropped**: no "Guide rings", and shapes draw no guides. Shapes still lay emoji out along their underlying geometry (rings, petals, triangles, grid); only the drawn lines go. The Backdrop select goes away; **"Soft glow"** becomes an on/off switch in the Background section. |
 | Face outward | Shared. Every placement carries a `heading`; the renderer applies it. |
 | Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. |
 | Build order | Engine → pattern/palette rules → spiral (+ strip, per-shape controls) → lotus → yantra → kolam. |

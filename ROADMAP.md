@@ -25,9 +25,13 @@ Spec (approved 2026-10-08, reviewed twice):
 visible, distinct, elegant pattern every time, no matter what the user
 does." Each slice gets its own plan in `docs/superpowers/plans/`.
 
-- [ ] **Slice 1 — engine, no visible change** (next: write its plan).
+- [x] **Slice 1 — engine, no visible change** (merged 2026-10-08).
       Shape interface, rings port, legacy colouring, `renderTo`,
-      `state.shapeParams.rings`; pixel-diff against a pre-refactor baseline.
+      `state.shapeParams.rings`; 0 px differ from the pre-refactor baseline
+      (`~/.tools/playwright/pixeldiff.mjs`, `baselines/shapes-slice1/`).
+      Carry into the slice 2 plan: `renderTo` returns `used`; delete
+      `guideRings` and `layout.guides`; re-enable the sweep's
+      "within radius + emojiSize" check once spacing is clamped.
 - [ ] **Toggles — investigate before slice 2.** "Alternate ring direction"
       and "Rotate emoji outward" can't be switched by clicking the switch:
       only the text label works. Cause (confirmed by real mouse clicks):
