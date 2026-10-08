@@ -90,7 +90,9 @@ export function updatePaletteCue(used, label){
   document.querySelectorAll("#paletteChips .palette-chip").forEach((chip, i) => {
     chip.classList.toggle("unused", !used.has(i));
   });
-  document.getElementById("paletteCue").textContent = cueText(label, used.size, state.palette.length);
+  const cue = document.getElementById("paletteCue");
+  const text = cueText(label, used.size, state.palette.length);
+  if (cue.textContent !== text) cue.textContent = text;
 }
 
 const DRAG_START_PX = 6;
@@ -170,6 +172,7 @@ export function setupCustomEmojiInput(onInput){
       customInput.value = "";
       if (!val) return;
       splitEmojiClusters(val).forEach(c => {
+        if (state.palette.includes(c)) return;
         state.palette.push(c);
         recordUse(c);
       });

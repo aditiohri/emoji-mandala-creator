@@ -129,10 +129,10 @@ export function drawBackground(ctx, W, H, opts) {
   if (opts.glow){
     const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,maxR*1.05);
     if (dark){
-      grad.addColorStop(0, "rgba(139,107,255,0.16)");
+      grad.addColorStop(0, "rgba(139,107,255,0.30)");
       grad.addColorStop(1, "rgba(139,107,255,0)");
     } else {
-      grad.addColorStop(0, "rgba(255,107,74,0.10)");
+      grad.addColorStop(0, "rgba(255,107,74,0.22)");
       grad.addColorStop(1, "rgba(255,107,74,0)");
     }
     ctx.fillStyle = grad;

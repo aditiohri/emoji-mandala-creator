@@ -1,6 +1,7 @@
 import { polar, fitFloor, fitRing, fitGap } from "./lib.js";
 
 const CENTER_SCALE = 1.05;
+const OVERLAP = 0;
 
 export default {
   id: "rings",
@@ -15,9 +16,9 @@ export default {
   ],
   alternate: { label: "Stagger alternate rings", default: true },
   maxEmoji: 6,
-  overlap: 0,
+  overlap: OVERLAP,
   layout({ rings, symmetry, spacing, alternate, centerMode, radius, emojiSize, minFont }){
-    const overlap = this.overlap;
+    const overlap = OVERLAP;
     const floor = fitFloor(emojiSize, minFont);
     const placements = [], groups = [];
     const center = centerMode === "emoji";

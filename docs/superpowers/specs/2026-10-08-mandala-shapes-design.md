@@ -34,8 +34,9 @@ shape and every combination of palette and control values:
 | Switching shapes | Each shape remembers its own control values for the session; shared controls are global. |
 | Backdrop | *(revised 2026-10-08)* Visible guide lines are **dropped**: no "Guide rings", and shapes draw no guides. Shapes still lay emoji out along their underlying geometry (rings, petals, triangles, grid); only the drawn lines go. The Backdrop select goes away; **"Soft glow"** becomes an on/off switch in the Background section. |
 | Face outward | Shared. Every placement carries a `heading`; the renderer applies it: the glyph's top points away from the center. *(Toggles decision, 2026-10-08)* Kept as is: once colouring is symmetric (slice 2), directional emoji (🦋🌊🔥🌙) form a clear starburst at defaults. Round emoji (✨🌸💠) show little change, and that is accepted. |
-| Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. *(Toggles decision, 2026-10-08)* For rings, the visible effect is the half-step offset of every other ring (straight spokes → staggered lattice); the direction reversal only shows with p = 3. So rings keep the behaviour but the switch is renamed **"Stagger alternate rings"**; the state key stays `alternate`. Options judged by screenshot and rejected: a progressive twist (spiral arms; overlaps the spiral shape) and swapping colours on alternate rings (hard to tell from off). |
+| Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. *(Toggles decision, 2026-10-08)* For rings, the visible effect is the half-step offset of every other ring (straight spokes → staggered lattice); the direction reversal never shows for rings: even rings are emitted in reverse angular order and also marked `reverse`, and the two cancel (found in the slice 2 final review; harmless, kept). Shapes that emit forward (lotus, kolam) do show `reverse` with p = 3. So rings keep the behaviour but the switch is renamed **"Stagger alternate rings"**; the state key stays `alternate`. Options judged by screenshot and rejected: a progressive twist (spiral arms; overlaps the spiral shape) and swapping colours on alternate rings (hard to tell from off). |
 | Toggle switches | *(2026-10-08)* Every switch must toggle when its **visible pill** is clicked with a mouse or tapped, not only via its text label. Today's `<div class="switch">` around a 0×0 checkbox fails this; switches become `<label class="switch">`. Verified with real Playwright locator clicks on the pill, never JS `checked =`/`click()`. |
+| Soft glow | *(2026-10-08, slice 2 final review)* Glow inner stop raised to 0.22 (light) / 0.30 (dark) alpha so the switch reads at a glance at defaults; 0.10 / 0.16 was barely visible. |
 | Build order | Engine → pattern/palette rules → spiral (+ strip, per-shape controls) → lotus → yantra → kolam. |
 
 **Assumptions (not stated by the user):** the chosen shape and its settings
@@ -163,7 +164,8 @@ groups: [{ size, kind, slot?, reverse?, ring? }]
    and `size % p === 0`; otherwise 1.
 4. Emoji at index `i`: `use[(base + k) % U]`, with
    `k = reverse ? (p - i % p) % p : i % p`. (For p = 2 reversing is a
-   no-op; it is only visible for p = 3. Rings' Alternate stays visible
+   no-op; it is only visible for p = 3, and for rings not at all, because
+   their reversed emit order cancels it. Rings' Alternate is visible
    through its half-step offset.)
 5. `used` = the set of palette indices actually drawn (usually a prefix,
    but not always — e.g. a yantra with an empty center skips slot 0). The
@@ -329,10 +331,8 @@ center, then one `cycle` group per ring (`reverse` on even rings when
 Alternate is on). Fit (slice 2+): `fitRing` per ring, `fitGap` against
 `ringSpacing` (and ring 1 against the center); if the radial gap fails at
 `MIN_SCALE`, `ringSpacing` is raised to the minimum that fits and rings
-beyond `radius` are dropped. From slice 2, `ringSpacing` is first
-**clamped** so the outer ring sits within `radius`:
-`ringSpacing = min((spacing/100)·(radius/rings), radius/rings)` (decided
-2026-10-08; today spacing > 1.0× pushes outer rings off the canvas).
+beyond `radius` are dropped. From slice 2 the outer ring always sits within `radius` (before, spacing
+> 1.0× pushed outer rings off the canvas).
 *(Decided in the slice 2 plan, 2026-10-08)* With `f = spacing/100`, the
 radial step is `min(f, 2 - f)·radius/rings`: 1.0× spreads rings evenly to
 the edge, below 1.0× packs them toward the center (as today), above 1.0×

@@ -51,3 +51,9 @@ test("fitGap: same-scale neighbours, other-scale neighbour, clamped", () => {
   assert.equal(fitGap({ gap: 500, emojiPx: 44, overlap: 0, floor: 0.55 }), 1);
   assert.equal(fitGap({ gap: 1, emojiPx: 44, overlap: 0, floor: 0.55 }), 0.55);
 });
+
+test("fitGap: overlap lowers the need", () => {
+  // unit = gap / (emojiPx·(1-overlap)) = 22 / 35.2 = 0.625
+  assert.ok(near(fitGap({ gap: 22, emojiPx: 44, overlap: 0.2, floor: 0.55 }), 0.625));
+  assert.ok(fitGap({ gap: 22, emojiPx: 44, overlap: 0.2, floor: 0.55 }) > fitGap({ gap: 22, emojiPx: 44, overlap: 0, floor: 0.55 }));
+});

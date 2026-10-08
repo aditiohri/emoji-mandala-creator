@@ -70,7 +70,7 @@ emojiDialog.addEventListener("click", (e) => {
 });
 emojiPicker.addEventListener("emoji-click", (e) => {
   const emoji = e.detail && e.detail.unicode;
-  if (!emoji) return;
+  if (!emoji || state.palette.includes(emoji)) return;
   state.palette.push(emoji);
   recordUse(emoji);
   renderPaletteChips(draw);
