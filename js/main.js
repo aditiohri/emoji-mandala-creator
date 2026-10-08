@@ -102,8 +102,15 @@ document.getElementById("centerMode").addEventListener("change", e => {
   state.centerMode = e.target.value;
   draw();
 });
-document.getElementById("backdrop").addEventListener("change", e => {
-  state.backdrop = e.target.value;
+// Soft glow: saved per device, next to the background.
+try {
+  const storedGlow = localStorage.getItem("mandala.glow");
+  if (storedGlow !== null) state.glow = storedGlow === "true";
+} catch(e) {}
+document.getElementById("glow").checked = state.glow;
+document.getElementById("glow").addEventListener("change", e => {
+  state.glow = e.target.checked;
+  try { localStorage.setItem("mandala.glow", String(state.glow)); } catch(err) {}
   draw();
 });
 document.getElementById("alternate").addEventListener("change", e => {

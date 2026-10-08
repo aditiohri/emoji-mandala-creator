@@ -120,6 +120,13 @@
       <div class="field">
         <label class="group-label">Background</label>
         <div class="bg-presets" id="bgPresets"></div>
+        <div class="toggle-row">
+          <label for="glow">Soft glow</label>
+          <label class="switch">
+            <input type="checkbox" id="glow" checked>
+            <span class="slider-pill"></span>
+          </label>
+        </div>
         <details class="bg-custom-section">
           <summary>Custom</summary>
           <div class="bg-custom-content">
@@ -149,15 +156,6 @@
             <button class="btn" id="bgAddCustom">Add to backgrounds</button>
           </div>
         </details>
-      </div>
-
-      <div class="field">
-        <label class="group-label">Backdrop</label>
-        <select id="backdrop">
-          <option value="none">None</option>
-          <option value="soft" selected>Soft glow</option>
-          <option value="rings">Guide rings</option>
-        </select>
       </div>
 
       <div class="footer-actions">

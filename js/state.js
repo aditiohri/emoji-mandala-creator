@@ -19,7 +19,7 @@ export const state = {
   emojiSize: 44,
   centerMode: "emoji",
   faceOutward: false,
-  backdrop: "soft",
+  glow: true,
   zoom: 100,
   background: { type: "system" }
 };

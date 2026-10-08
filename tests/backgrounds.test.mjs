@@ -13,27 +13,19 @@ function mockCtx() {
   };
 }
 
-test("guide rings at i/guideRings of maxR, from explicit options", () => {
-  const ctx = mockCtx();
-  drawBackground(ctx, 1000, 1000, {
-    background: { type: "solid", color: "#000000" },
-    backdrop: "rings", emojiSize: 44, guideRings: 4,
-  });
-  const maxR = 500 - 44 * 0.9;
-  assert.deepEqual(ctx.calls.map(c => c.r), [1, 2, 3, 4].map(i => (i / 4) * maxR));
-  assert.ok(ctx.calls.every(c => c.x === 500 && c.y === 500));
-});
-
 test("returns dark for dark solid, light for light solid", () => {
-  const opts = { backdrop: "none", emojiSize: 44, guideRings: 6 };
+  const opts = { glow: false, emojiSize: 44 };
   assert.equal(drawBackground(mockCtx(), 1000, 1000, { ...opts, background: { type: "solid", color: "#000000" } }), true);
   assert.equal(drawBackground(mockCtx(), 1000, 1000, { ...opts, background: { type: "solid", color: "#ffffff" } }), false);
 });
 
-test("soft backdrop draws one glow circle of radius maxR*1.05", () => {
+test("glow draws one circle of radius maxR*1.05; no glow draws none", () => {
   const ctx = mockCtx();
-  drawBackground(ctx, 1000, 1000, { background: { type: "solid", color: "#000000" }, backdrop: "soft", emojiSize: 20, guideRings: 6 });
+  drawBackground(ctx, 1000, 1000, { background: { type: "solid", color: "#000000" }, glow: true, emojiSize: 20 });
   assert.deepEqual(ctx.calls.map(c => c.r), [(500 - 20 * 0.9) * 1.05]);
+  const off = mockCtx();
+  drawBackground(off, 1000, 1000, { background: { type: "solid", color: "#000000" }, glow: false, emojiSize: 20 });
+  assert.deepEqual(off.calls, []);
 });
 
 test("getBackgroundLuminance takes the background object", () => {

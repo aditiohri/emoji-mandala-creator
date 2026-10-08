@@ -82,7 +82,7 @@ export function getBackgroundLuminance(bg) {
   return 0.5;
 }
 
-// Draw the canvas background. opts = { background, backdrop, emojiSize, guideRings }
+// Draw the canvas background. opts = { background, glow, emojiSize }
 export function drawBackground(ctx, W, H, opts) {
   const bg = opts.background;
   const cx = W/2, cy = H/2;
@@ -125,8 +125,8 @@ export function drawBackground(ctx, W, H, opts) {
     ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
   }
 
-  // Draw backdrop (soft glow or rings) on top
-  if (opts.backdrop === "soft"){
+  // Soft glow on top
+  if (opts.glow){
     const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,maxR*1.05);
     if (dark){
       grad.addColorStop(0, "rgba(139,107,255,0.16)");
@@ -139,15 +139,6 @@ export function drawBackground(ctx, W, H, opts) {
     ctx.beginPath();
     ctx.arc(cx,cy,maxR*1.05,0,Math.PI*2);
     ctx.fill();
-  } else if (opts.backdrop === "rings"){
-    ctx.strokeStyle = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
-    ctx.lineWidth = 1;
-    for (let i=1; i<=opts.guideRings; i++){
-      const r = (i/opts.guideRings) * maxR;
-      ctx.beginPath();
-      ctx.arc(cx,cy,r,0,Math.PI*2);
-      ctx.stroke();
-    }
   }
 
   return dark;

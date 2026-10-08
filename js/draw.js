@@ -1,7 +1,7 @@
 import { state, DEFAULT_PALETTE } from "./state.js";
 import { drawBackground } from "./backgrounds.js";
 import { getShape } from "./shapes/index.js";
-import { assignLegacy } from "./pattern.js";
+import { assignEmoji } from "./pattern.js";
 
 const FONT = "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
 
@@ -14,14 +14,14 @@ export function initCanvas(){
 }
 
 // Draw a mandala on any square canvas of side W.
-// opts = { shape, params, palette, background, backdrop, emojiSize,
+// opts = { shape, params, palette, background, glow, emojiSize,
 //          rotation (degrees), centerMode, faceOutward, minFont }
+// Returns { used }: the palette indices drawn.
 export function renderTo(ctx, W, opts){
   const { shape, params, emojiSize, minFont, faceOutward } = opts;
   ctx.clearRect(0, 0, W, W);
   const dark = drawBackground(ctx, W, W, {
-    background: opts.background, backdrop: opts.backdrop, emojiSize,
-    guideRings: params.rings, // slice 1 only: backdrop guide circles
+    background: opts.background, glow: opts.glow, emojiSize,
   });
 
   const cx = W/2, cy = W/2;
@@ -31,7 +31,7 @@ export function renderTo(ctx, W, opts){
   const palette = opts.palette.length ? opts.palette : DEFAULT_PALETTE;
 
   const { placements, groups } = shape.layout({ ...params, centerMode: opts.centerMode, radius, emojiSize, minFont });
-  const { emojiFor } = assignLegacy(groups, palette);
+  const { emojiFor, used } = assignEmoji(groups, palette, shape.maxEmoji);
 
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -44,15 +44,16 @@ export function renderTo(ctx, W, opts){
     ctx.fillText(emojiFor(p.group, p.index), 0, 0);
     ctx.restore();
   }
+  return { used };
 }
 
 export function draw(){
-  renderTo(ctx, canvas.width, {
+  return renderTo(ctx, canvas.width, {
     shape: getShape(state.shape),
     params: state.shapeParams[state.shape],
     palette: state.palette,
     background: state.background,
-    backdrop: state.backdrop,
+    glow: state.glow,
     emojiSize: state.emojiSize,
     rotation: state.rotation,
     centerMode: state.centerMode,
