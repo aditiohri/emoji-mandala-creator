@@ -93,6 +93,12 @@ main{
   overflow:hidden;
   transform:scale(1);
 }
+/* Desktop: the controls panel is taller than the viewport, so pin the canvas
+   to the top of the stage and keep it in view while the controls scroll. */
+@media (min-width: 861px){
+  .stage{ align-items:flex-start; }
+  .canvas-wrap{ position:sticky; top:28px; }
+}
 canvas{
   width:100%;
   height:100%;

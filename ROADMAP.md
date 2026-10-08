@@ -2,24 +2,52 @@
 
 Shipped: easier palette building (native emoji keyboard entry + full
 emoji-library browser), on-screen zoom (desktop only), a clearer
-desktop save flow, and a separate Share button.
+desktop save flow, a separate Share button, and (October 2026):
+
+- Code split into `styles.css` + plain ES modules under `js/` (no build
+  step, no framework).
+- "Alternate ring direction" and "Rotate emoji outward" now visibly work
+  (emoji cycle by position per ring instead of being random, so the
+  direction is readable).
+- Palette defaults to the person's most-used emoji on all devices
+  (`js/usage.js`, per-device `localStorage`; counts adds only).
+- User-selectable backgrounds: presets plus custom solid / gradient /
+  image, saved per device (`js/backgrounds.js`).
+- Desktop layout: canvas pinned to the top of the stage and sticky while
+  the controls scroll.
 
 Still open, roughly in the order we'd tackle them:
 
-## 1. Ring-direction / rotate-outward bug
+## 1. Customizable mandala shapes (next; needs a spec first)
 
-"Alternate ring direction" and "Rotate emoji outward" don't visibly do
-what they're supposed to. Needs debugging (not a redesign) — the
-`faceOutward` rotation math in `draw()` checks out on paper, so the
-actual cause is still unknown and needs to be found by testing in the
-browser, not just reading the code.
+Today `draw()` hardcodes concentric rings of evenly spaced emoji. Many
+traditional mandala families don't fit that: yantras (interlocking
+triangles, lotus petals, nested squares with gates), rangolis (dot grids
+and kolam-style lattices, petal motifs), flower/phyllotaxis spirals,
+rosettes, etc.
 
-## 2. Default to most-used emoji on phone
+Direction (to be confirmed in the brainstorm/spec, not decided):
 
-On phone, default the palette to whichever emoji the person actually
-uses most, instead of the fixed `DEFAULT_PALETTE`. Needs: a way to
-detect "on phone" (already have a touch-device check in `index.html`),
-and persistence of usage counts across sessions (`localStorage`).
+- A "geometry" abstraction: a shape takes the current controls (rings,
+  symmetry, spacing, rotation, ...) and returns a list of placements
+  `{x, y, rotation, scale, ring/group}`; `draw()` just renders them.
+  Today's behaviour becomes the first shape ("Concentric rings").
+- One file per shape under `js/shapes/`, behind a shared interface, so
+  shapes can be added one at a time.
+- Decide how existing controls map onto shapes that don't have "rings",
+  how shapes interact with backgrounds/backdrops (e.g. a shape could
+  also draw guide lines), and how alternate/face-outward generalize.
+- Build in slices: spec -> interface + concentric-rings port -> one new
+  shape (e.g. phyllotaxis spiral) -> more.
+
+## 2. Small follow-ups
+
+- Selecting a newly created custom background right after adding it
+  (currently it's added but not selected).
+- Image-upload backgrounds are untested in a browser.
+- Most-used counts only increment when an emoji is added to the palette,
+  so emoji already in the default palette aren't counted until removed
+  and re-added; decide whether that's good enough.
 
 ## 3. Paid tier: personal gallery + PDF export
 
