@@ -1,7 +1,127 @@
-export function drawBackground(ctx, W, H, state, dark){
+// Calculate relative luminance of a color (for determining text color)
+export function getLuminance(r, g, b, a = 1) {
+  // Normalize to 0-1
+  r /= 255; g /= 255; b /= 255;
+  // Adjust for gamma
+  r = r <= 0.03928 ? r / 12.92 : Math.pow((r + 0.055) / 1.055, 2.4);
+  g = g <= 0.03928 ? g / 12.92 : Math.pow((g + 0.055) / 1.055, 2.4);
+  b = b <= 0.03928 ? b / 12.92 : Math.pow((b + 0.055) / 1.055, 2.4);
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) * a;
+}
+
+// Parse hex color to RGB
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 255, g: 255, b: 255 };
+}
+
+// Get luminance for a solid color
+function getLuminanceForColor(color) {
+  const rgb = hexToRgb(color);
+  return getLuminance(rgb.r, rgb.g, rgb.b);
+}
+
+// Calculate average luminance for a gradient
+function getLuminanceForGradient(color1, color2) {
+  const lum1 = getLuminanceForColor(color1);
+  const lum2 = getLuminanceForColor(color2);
+  return (lum1 + lum2) / 2;
+}
+
+// Get luminance from image (sample the center or downscale)
+function getLuminanceForImage(img) {
+  if (!img) return 0.5;
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = 64;
+  tempCanvas.height = 64;
+  const tempCtx = tempCanvas.getContext("2d");
+  tempCtx.drawImage(img, 0, 0, 64, 64);
+
+  const imageData = tempCtx.getImageData(0, 0, 64, 64);
+  const data = imageData.data;
+  let totalLum = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    totalLum += getLuminance(data[i], data[i+1], data[i+2], data[i+3]/255);
+  }
+  return totalLum / (data.length / 4);
+}
+
+// Get luminance from current background state
+export function getBackgroundLuminance(state) {
+  const bg = state.background;
+  if (!bg) return 0.5;
+
+  if (bg.type === "system") {
+    // For system, check system theme
+    const isDark = matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+    const rootTheme = document.documentElement.getAttribute("data-theme");
+    const dark = rootTheme === "dark" || (rootTheme !== "light" && isDark);
+    return dark ? 0.15 : 0.92; // Dark is lower, light is higher
+  }
+
+  if (bg.type === "solid" && bg.color) {
+    return getLuminanceForColor(bg.color);
+  }
+
+  if (bg.type === "gradient" && bg.color1 && bg.color2) {
+    return getLuminanceForGradient(bg.color1, bg.color2);
+  }
+
+  if (bg.type === "image" && bg.imageElement) {
+    return getLuminanceForImage(bg.imageElement);
+  }
+
+  return 0.5;
+}
+
+// Draw the canvas background
+export function drawBackground(ctx, W, H, state) {
+  const bg = state.background;
   const cx = W/2, cy = H/2;
   const maxR = W/2 - state.emojiSize*0.9;
 
+  // Determine if we should use dark colors
+  const lum = getBackgroundLuminance(state);
+  const dark = lum < 0.5; // If average luminance is low, we're dark
+
+  // Draw background
+  if (!bg || bg.type === "system") {
+    const isDark = matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+    const rootTheme = document.documentElement.getAttribute("data-theme");
+    const systemDark = rootTheme === "dark" || (rootTheme !== "light" && isDark);
+    const bgColor = systemDark ? "#1a1526" : "#f7f0e2";
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, W, H);
+  } else if (bg.type === "solid" && bg.color) {
+    ctx.fillStyle = bg.color;
+    ctx.fillRect(0, 0, W, H);
+  } else if (bg.type === "gradient" && bg.color1 && bg.color2) {
+    const angle = (bg.angle || 0) * Math.PI / 180;
+    const dist = Math.sqrt(W*W + H*H);
+    const x1 = cx - dist/2 * Math.cos(angle);
+    const y1 = cy - dist/2 * Math.sin(angle);
+    const x2 = cx + dist/2 * Math.cos(angle);
+    const y2 = cy + dist/2 * Math.sin(angle);
+
+    const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+    grad.addColorStop(0, bg.color1);
+    grad.addColorStop(1, bg.color2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+  } else if (bg.type === "image" && bg.imageElement) {
+    const img = bg.imageElement;
+    // Cover-fit the image to the square
+    const scale = Math.max(W / img.width, H / img.height);
+    const x = (W - img.width * scale) / 2;
+    const y = (H - img.height * scale) / 2;
+    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+  }
+
+  // Draw backdrop (soft glow or rings) on top
   if (state.backdrop === "soft"){
     const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,maxR*1.05);
     if (dark){
@@ -25,4 +145,6 @@ export function drawBackground(ctx, W, H, state, dark){
       ctx.stroke();
     }
   }
+
+  return dark;
 }
