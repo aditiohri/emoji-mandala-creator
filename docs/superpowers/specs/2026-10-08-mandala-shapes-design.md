@@ -32,7 +32,7 @@ shape and every combination of palette and control values:
 | Crowding | Per-shape slider ranges **plus** a fit rule (shrink, then re-space with fewer emoji) as a safety net. Shapes may opt into some overlap. |
 | Picking a shape | Thumbnail strip of live previews (palette-coloured, shape defaults), like the background swatches. Shuffle also picks a random shape. |
 | Switching shapes | Each shape remembers its own control values for the session; shared controls are global. |
-| Guides | Backdrop "Guide rings" becomes **"Guides"**: the current shape draws its own guide lines. "Soft glow" and "None" stay global. |
+| Backdrop | *(revised 2026-10-08)* Guide lines are **dropped** entirely: no "Guide rings", and shapes draw no guides. The Backdrop select goes away; **"Soft glow"** becomes an on/off switch in the Background section. |
 | Face outward | Shared. Every placement carries a `heading`; the renderer applies it. |
 | Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. |
 | Build order | Engine → pattern/palette rules → spiral (+ strip, per-shape controls) → lotus → yantra → kolam. |
@@ -49,14 +49,14 @@ symmetric and calm; it is intended, not a bug.
 ## 2. Approaches considered
 
 1. **Pure layout functions (chosen).** A shape is a pure function from
-   parameters to `{ placements, groups, guides }`. A shared renderer draws
+   parameters to `{ placements, groups }`. A shared renderer draws
    them; a shared assigner picks emoji. Small shared geometry helpers in
    `js/shapes/lib.js` so lotus/yantra reuse pieces.
    *Pros:* shapes are DOM-free and unit-testable in Node; thumbnails are the
    same code on a small canvas; the "no chaos" invariants live in one
    assigner, one fit helper, and one test sweep.
 2. **Imperative shapes** that draw straight to the canvas. Every shape
-   re-implements emoji choice, face-outward, guides and fitting — exactly
+   re-implements emoji choice, face-outward and fitting — exactly
    where chaos creeps in — and nothing is testable without a browser.
 3. **Declarative recipes** composed from primitives, interpreted by an
    engine. Over-built for six shapes and awkward for phyllotaxis; approach
@@ -69,7 +69,7 @@ symmetric and calm; it is intended, not a bug.
 ```
 js/shapes/index.js     registry: ordered SHAPES list, getShape(id)
 js/shapes/lib.js       shared geometry: polar(), chord(), fitRing(), fitGap(),
-                       polygonPoints(), petalCurve(), nearestPairs()
+                       polygonPoints(), petalCurve()
 js/shapes/rings.js     Concentric rings (port of today's draw loop)
 js/shapes/spiral.js    Phyllotaxis spiral
 js/shapes/lotus.js     Lotus / rosette
@@ -106,7 +106,7 @@ export default {
   alternate: { label: "Alternate ring direction", default: true }, // or null
   maxEmoji: 6,                      // cap on distinct emoji for this shape (≤ 6)
   overlap: 0,                       // allowed overlap fraction, 0–0.5
-  layout(params) { /* pure */ return { placements, groups, guides }; },
+  layout(params) { /* pure */ return { placements, groups }; },
 };
 ```
 
@@ -144,10 +144,9 @@ groups: [{ size, kind, slot?, reverse?, ring? }]
 //   slot:    optional fixed palette slot (role), e.g. bindu -> 0
 //   reverse: run the pattern the other way (used by Alternate)
 //   ring:    rings shape only, for the slice-1 legacy assigner
-guides: [{ type: "circle", r } | { type: "path", points: [[x,y],...], closed }
-         | { type: "segments", pairs: [[[x1,y1],[x2,y2]], ...] }]
-//   curves (petals, spirals) are pre-sampled into polylines
 ```
+
+(Slice 1's `rings.layout` also returns `guides`; slice 2 removes it.)
 
 ### Emoji assignment (`js/pattern.js`)
 
@@ -213,22 +212,20 @@ so any shape-specific gap it misses fails a test.
 
 `renderTo(ctx, W, opts)` draws on a **square** canvas of side `W` (all
 canvases here are square), where `opts = { shape, params, palette,
-background, backdrop, emojiSize, rotation, centerMode, faceOutward,
+background, glow, emojiSize, rotation, centerMode, faceOutward,
 minFont }`. `opts.rotation` is in **degrees** (as in `state`) and is
-converted to radians once, `rot = rotation·π/180`.
+converted to radians once, `rot = rotation·π/180`. `renderTo` returns
+`{ used }` from the assigner, so the palette cue never recomputes it.
 
 1. `ctx.clearRect(0, 0, W, W)`; `drawBackground(ctx, W, W, { background,
-   backdrop, emojiSize })` → `dark` (fill + soft glow). Image-background
-   luminance is cached in a `WeakMap` keyed by the image element, since
-   thumbnails redraw often. *Slice 1 only:* the options also carry
-   `guideRings` (the rings count) so the existing guide circles keep
-   drawing at `(i/rings)·maxR` for backdrop value `"rings"`.
+   glow, emojiSize })` → `dark` (fill, then the soft glow when `glow` is
+   true). Image-background luminance is cached in a `WeakMap` keyed by the
+   image element, since thumbnails redraw often. *Slice 1 only:* the
+   options carry `backdrop` and `guideRings` instead of `glow`, so today's
+   guide circles keep drawing; slice 2 deletes both.
 2. `layout = shape.layout({...params, centerMode, radius, emojiSize, minFont})`.
-3. *From slice 2:* if `backdrop === "guides"`, stroke `layout.guides`
-   rotated by `rot`, in today's faint style (`rgba(255,255,255,0.06)` dark
-   / `rgba(0,0,0,0.06)` light, 1px). Slice 1 ignores `layout.guides`.
-4. `assignEmoji(...)` (slice 1: `assignLegacy(...)`).
-5. Set `textAlign = "center"`, `textBaseline = "middle"`,
+3. `assignEmoji(...)` (slice 1: `assignLegacy(...)`).
+4. Set `textAlign = "center"`, `textBaseline = "middle"`,
    `fillStyle = dark ? "#f2ecdd" : "#241c38"`. Draw placements **in array
    order** (center first, then rings in emit order). For each: font
    `max(minFont, emojiSize·scale) + "px 'Apple Color Emoji','Segoe UI
@@ -242,7 +239,7 @@ exporting `canvas` and `ctx` (`export.js:1` imports `canvas`).
 
 **Thumbnails** call `renderTo` on a tile canvas of width `W` with
 `k = W / canvas.width`: `emojiSize = 44·k`, `minFont = 14·k`, `rotation 0`,
-`faceOutward false`, `centerMode "emoji"`, `backdrop "soft"`, the shape's
+`faceOutward false`, `centerMode "emoji"`, the current `glow`, the shape's
 default params, and the current palette and background.
 
 ### State
@@ -252,14 +249,17 @@ state.shape = "rings";
 state.shapeParams = { rings: { rings: 6, symmetry: 10, spacing: 100, alternate: true } };
 // other shapes filled lazily from their control defaults on first visit
 // global, unchanged: palette, rotation, emojiSize, centerMode, faceOutward,
-//                    backdrop ("none" | "soft" | "guides"), zoom, background
+//                    zoom, background
+// from slice 2: glow (boolean, default true) replaces backdrop
 ```
 
 `state.rings / symmetry / spacing / alternate` are removed; every reader
 (`draw.js`, `backgrounds.js:141`, `main.js` slider bindings and Shuffle)
 moves to `state.shapeParams.rings` in slice 1. `backdrop` keeps today's
-values (`"none" | "soft" | "rings"`) in slice 1; slice 2 renames `"rings"`
-to `"guides"` in `index.html` and code together.
+values (`"none" | "soft" | "rings"`) in slice 1. Slice 2 replaces it with
+`state.glow`: the Backdrop select is removed from `index.html`, and `glow`
+is saved per device next to the background (`localStorage` key
+`mandala.glow`), because it now sits in the Background section.
 
 ## 4. UI
 
@@ -271,8 +271,8 @@ to `"guides"` in `index.html` and code together.
   `index.html` are replaced (slice 3) by a container that `shapeControls.js`
   fills from `shape.controls`, reusing today's slider markup and classes.
   Generated ids are `shape-<key>` / `shape-<key>-val` so they never clash
-  with static ids. Emoji size, Rotation, Center, Face outward, Background,
-  Backdrop stay static.
+  with static ids. Emoji size, Rotation, Center, Face outward and
+  Background stay static.
 - **Alternate toggle** — label from `shape.alternate.label`; row hidden
   when the shape declares `null`.
 - **Palette cue** — chips in `used` are normal, the rest dimmed; a caption
@@ -290,7 +290,9 @@ to `"guides"` in `index.html` and code together.
     list with `innerHTML = ""`, which would destroy the dragged node);
   - keyboard: chips are focusable; with a chip focused, ←/→ move it, with
     `preventDefault()`.
-- **Backdrop select** — None / Soft glow / Guides (value `"guides"`).
+- **Soft glow** — an on/off switch (default on) inside the Background
+  section, using the same switch markup as the other toggles; the
+  Backdrop select is removed.
 - **Shuffle** — picks a random shape, then random values within each
   control's `shuffle` range (or full range), random Alternate if
   supported, plus today's global randomization (rotation, face outward,
@@ -318,8 +320,7 @@ beyond `radius` are dropped. From slice 2, `ringSpacing` is first
 `ringSpacing = min((spacing/100)·(radius/rings), radius/rings)` (decided
 2026-10-08; today spacing > 1.0× pushes outer rings off the canvas). The
 slice 2 plan must decide what spacing > 1.0× then means, so the slider has
-no dead range. "Empty" removes the center emoji. Guides: a
-circle at each drawn ring's actual radius. `maxEmoji` 6.
+no dead range. "Empty" removes the center emoji. `maxEmoji` 6.
 
 **Phyllotaxis spiral** — seed `i = 1..n`: angle `i·divergence`, radius
 `R·√(i/n)`, heading = angle. Controls: Seeds 40–300 (default 144),
@@ -329,10 +330,8 @@ Groups: center (if shown), then `bands` `solid` groups splitting the seeds
 into **equal-count** runs by index (equal-area annuli). Fit: compute the
 actual minimum nearest-neighbour distance (brute force, n ≤ 300) and
 shrink to it; at `MIN_SCALE`, lower `n` until it fits. Seeds closer to the
-center emoji than the need are dropped. Alternate: `null` in v1. Guides:
-`segments` joining each seed to its two nearest later seeds
-(`lib.nearestPairs`), which traces the visible parastichy spirals at any
-seed count. "Empty" removes the center emoji. `maxEmoji` 6.
+center emoji than the need are dropped. Alternate: `null` in v1. "Empty"
+removes the center emoji. `maxEmoji` 6.
 
 **Lotus / rosette** — layers of petals around the center. Controls: Layers
 1–4 (default 2), Petals 4–16 (default 8), Petal length 50–150 (default 100).
@@ -340,7 +339,7 @@ Each petal has a tip emoji and two side emoji. Per layer, two groups:
 tips (`cycle`, size = petals, index = petal number) and sides (`cycle`,
 size = petals, **both sides of petal j share index j**, so each petal is
 mirror-symmetric). Alternate ("Interleave petal layers", default on): odd
-layers offset by half a petal. Guides: petal outlines (`lib.petalCurve`).
+layers offset by half a petal. Petal positions use `lib.petalCurve`.
 "Empty" removes the center emoji. `maxEmoji` 6, `overlap` 0.15.
 
 **Yantra** — inside out, with fixed role slots:
@@ -363,8 +362,7 @@ layers offset by half a petal. Guides: petal outlines (`lib.petalCurve`).
 
 Controls: Triangles 1–3 (default 1), Petals 8–16 step 4 (default 8), Edge
 detail 0–3 (default 1). Alternate ("Interleave petals"): petals offset by
-half a petal. Guides: triangles, petal outlines, square with gates. "Empty"
-removes the bindu emoji (its guide dot stays). `maxEmoji` 6.
+half a petal. "Empty" removes the bindu emoji. `maxEmoji` 6.
 
 **Kolam / rangoli lattice** — square grid of `g × g` dots (Grid 3–11 odd,
 default 7), `kmax = (g-1)/2`, cell `s = radius/(kmax·√2) · spacing/100`
@@ -372,9 +370,8 @@ with Spacing 50–100 (default 90), so corners at `√2·kmax·s` always stay
 inside `radius`. Emoji on the dots. Groups: center dot, then one `cycle`
 group per square ring `k = 1..kmax` (8k dots). Alternate ("Alternate dot
 rings"): odd rings `reverse`. Fit: neighbour distance is `s`; at
-`MIN_SCALE`, reduce `g` by 2 until it fits. Guides: the dot grid plus
-diagonal lattice lines through the dots. "Empty" removes the center dot's
-emoji. `maxEmoji` 4.
+`MIN_SCALE`, reduce `g` by 2 until it fits. "Empty" removes the center
+dot's emoji. `maxEmoji` 4.
 
 ## 6. Slices
 
@@ -397,9 +394,13 @@ subagents, screenshot-verified by me before merge, and ticked off in
    a 3-emoji palette): fewer than 0.5% of pixels differ by more than
    8/255.
 2. **Pattern and palette rules.** Real `assignEmoji`, `fitRing`/`fitGap`,
-   rings uses them; `assignLegacy` deleted; shape guides replace the
-   backdrop circles ("Guides" option); palette cue; drag-to-reorder.
-   Visible change: rings become seam-free and never overlap.
+   rings uses them; `assignLegacy` deleted; guide rings and the Backdrop
+   select removed, Soft glow becomes a switch in the Background section
+   (`state.glow`, `guideRings` and `layout.guides` deleted); `renderTo`
+   returns `used`; palette cue; drag-to-reorder. Visible change: rings
+   become seam-free and never overlap. The sweep test regains "every
+   placement within `radius + emojiSize`" (possible once spacing is
+   clamped).
 3. **Phyllotaxis spiral + shape strip + generated per-shape controls +
    Shuffle picks a shape.**
 4. **Lotus / rosette** (adds `petalCurve`, `polygonPoints`).

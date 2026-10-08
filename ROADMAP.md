@@ -6,9 +6,9 @@ desktop save flow, a separate Share button, and (October 2026):
 
 - Code split into `styles.css` + plain ES modules under `js/` (no build
   step, no framework).
-- "Alternate ring direction" and "Rotate emoji outward" now visibly work
-  (emoji cycle by position per ring instead of being random, so the
-  direction is readable).
+- Emoji cycle by position per ring instead of being random (meant to make
+  "Alternate ring direction" and "Rotate emoji outward" readable; they
+  turned out not to be — see item 1, "Toggles").
 - Palette defaults to the person's most-used emoji on all devices
   (`js/usage.js`, per-device `localStorage`; counts adds only).
 - User-selectable backgrounds: presets plus custom solid / gradient /
@@ -28,8 +28,18 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
 - [ ] **Slice 1 — engine, no visible change** (next: write its plan).
       Shape interface, rings port, legacy colouring, `renderTo`,
       `state.shapeParams.rings`; pixel-diff against a pre-refactor baseline.
-- [ ] Slice 2 — symmetric emoji assignment, fitting, shape guides,
-      palette "using K of N" cue, drag-to-reorder.
+- [ ] **Toggles — investigate before slice 2.** "Alternate ring direction"
+      and "Rotate emoji outward" can't be switched by clicking the switch:
+      only the text label works. Cause (confirmed by real mouse clicks):
+      each switch is a `<div class="switch">` around a 0×0 hidden
+      checkbox, so the visible pill isn't tied to it. Likely fix:
+      `<label class="switch">`. Then, separately: even when on, neither
+      toggle makes a change you can see at a glance on the default
+      mandala. Decide what each should visibly do, judged by eye from
+      before/after screenshots, not by "the pixels changed".
+- [ ] Slice 2 — symmetric emoji assignment, fitting, palette "using K of
+      N" cue, drag-to-reorder; drop guide rings and the Backdrop select,
+      Soft glow becomes a switch in Background (spec revised 2026-10-08).
 - [ ] Slice 3 — phyllotaxis spiral, shape thumbnail strip, generated
       per-shape controls, Shuffle picks a shape.
 - [ ] Slice 4 — lotus / rosette.
