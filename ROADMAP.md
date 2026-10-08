@@ -29,21 +29,22 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
       Shape interface, rings port, legacy colouring, `renderTo`,
       `state.shapeParams.rings`; 0 px differ from the pre-refactor baseline
       (`~/.tools/playwright/pixeldiff.mjs`, `baselines/shapes-slice1/`).
-      Carry into the slice 2 plan: `renderTo` returns `used`; delete
-      `guideRings` and `layout.guides`; re-enable the sweep's
-      "within radius + emojiSize" check once spacing is clamped.
-- [ ] **Toggles — investigate before slice 2.** "Alternate ring direction"
-      and "Rotate emoji outward" can't be switched by clicking the switch:
-      only the text label works. Cause (confirmed by real mouse clicks):
-      each switch is a `<div class="switch">` around a 0×0 hidden
-      checkbox, so the visible pill isn't tied to it. Likely fix:
-      `<label class="switch">`. Then, separately: even when on, neither
-      toggle makes a change you can see at a glance on the default
-      mandala. Decide what each should visibly do, judged by eye from
-      before/after screenshots, not by "the pixels changed".
-- [ ] Slice 2 — symmetric emoji assignment, fitting, palette "using K of
-      N" cue, drag-to-reorder; drop guide rings and the Backdrop select,
-      Soft glow becomes a switch in Background (spec revised 2026-10-08).
+- [x] **Toggles** (fixed in slice 2). The pill wasn't clickable because
+      each switch was a `<div>` around a 0×0 checkbox; switches are now
+      `<label class="switch">` (verified by real mouse clicks). Once
+      colouring became symmetric, both toggles read at a glance; Alternate
+      is renamed "Stagger alternate rings" (its direction reversal never
+      shows on rings). Soft glow strengthened so it reads too.
+- [x] **Slice 2 — pattern, fit, palette rules** (merged 2026-10-08).
+      Symmetric `assignEmoji` (≤ 6 emoji from the front of the palette),
+      fitted rings (never overlap, evenly re-spaced; spacing > 1.0× opens
+      the center), Soft glow switch replaces Backdrop/guide rings, palette
+      "using K of N" cue, drag/arrow-key reorder, no duplicate emoji.
+      Checked by `~/.tools/playwright/slice2.mjs` and `clicks.mjs`.
+      Leftovers: two-finger drags of two chips at once can mis-order;
+      arrow keys on a focused × move its chip; drop slots go stale if the
+      page scrolls mid-drag; duplicate check treats ❤ and ❤️ as different;
+      rings' groups still declare a `reverse` that cancels out.
 - [ ] Slice 3 — phyllotaxis spiral, shape thumbnail strip, generated
       per-shape controls, Shuffle picks a shape.
 - [ ] Slice 4 — lotus / rosette.
