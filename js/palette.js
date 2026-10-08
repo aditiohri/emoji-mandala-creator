@@ -69,6 +69,22 @@ export function renderEmojiGrid(onChipChange){
   });
 }
 
+// Caption under the palette (spec §4 "Palette cue").
+export function cueText(label, used, total){
+  if (used >= total) return total === 1
+    ? `${label} is using your 1 emoji`
+    : `${label} is using all ${total} of your emoji`;
+  return `${label} is using ${used} of your ${total} emoji — drag one forward to use it`;
+}
+
+// Dim the chips the mandala doesn't use and update the caption.
+export function updatePaletteCue(used, label){
+  document.querySelectorAll("#paletteChips .palette-chip").forEach((chip, i) => {
+    chip.classList.toggle("unused", !used.has(i));
+  });
+  document.getElementById("paletteCue").textContent = cueText(label, used.size, state.palette.length);
+}
+
 export function setupCustomEmojiInput(onInput){
   const customInput = document.getElementById("customEmoji");
   let addTimer = null;

@@ -1,10 +1,12 @@
 import { state, PICKER_EMOJI, DEFAULT_PALETTE } from "./state.js";
-import { initCanvas, draw } from "./draw.js";
+import { initCanvas, draw as drawCanvas } from "./draw.js";
+import { getShape } from "./shapes/index.js";
 import {
   renderPaletteChips,
   renderEmojiGrid,
   syncGridActiveStates,
-  setupCustomEmojiInput
+  setupCustomEmojiInput,
+  updatePaletteCue
 } from "./palette.js";
 import {
   setupExportPanel,
@@ -29,6 +31,12 @@ const PRESET_BACKGROUNDS = [
 ];
 
 initCanvas();
+
+// Redraw the canvas, then show which palette emoji it used.
+function draw(){
+  const { used } = drawCanvas();
+  updatePaletteCue(used, getShape(state.shape).label);
+}
 
 // Initialize palette from usage data if available
 const usedEmoji = topEmoji(8);

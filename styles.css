@@ -210,6 +210,8 @@ input[type="range"]{
   background:color-mix(in srgb, var(--coral) 20%, transparent);
   color:var(--coral);
 }
+.palette-chip.unused{ opacity:0.4; }
+.palette-cue{ margin:6px 0 0; }
 
 .custom-row{
   display:flex;
