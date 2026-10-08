@@ -1,0 +1,53 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { MIN_SCALE, fitFloor, chord, fitRing, fitGap } from "../js/shapes/lib.js";
+
+const near = (a, b) => Math.abs(a - b) < 1e-9;
+
+test("fitFloor is max(0.55, minFont/emojiSize)", () => {
+  assert.equal(MIN_SCALE, 0.55);
+  assert.equal(fitFloor(44, 14), 0.55);
+  assert.equal(fitFloor(20, 14), 0.7);
+});
+
+test("chord", () => {
+  assert.ok(near(chord(10, 6), 10));
+  assert.ok(near(chord(1, 2), 2));
+});
+
+test("fitRing: roomy ring keeps count and scale 1", () => {
+  assert.deepEqual(fitRing({ r: 200, count: 10, emojiPx: 44, overlap: 0, floor: 0.55 }), { count: 10, scale: 1 });
+});
+
+test("fitRing: shrinks to the chord while above the floor", () => {
+  const r = 50, count = 10; // chord ≈ 30.9
+  const { count: n, scale } = fitRing({ r, count, emojiPx: 44, overlap: 0, floor: 0.55 });
+  assert.equal(n, 10);
+  assert.ok(near(scale, chord(r, count) / 44));
+});
+
+test("fitRing: below the floor, keeps the floor and re-spaces with fewer", () => {
+  const { count, scale } = fitRing({ r: 40, count: 24, emojiPx: 44, overlap: 0, floor: 0.55 });
+  assert.equal(scale, 0.55);
+  assert.ok(chord(40, count) >= 0.55 * 44);
+  assert.ok(chord(40, count + 1) < 0.55 * 44);
+  assert.ok(count >= 3 && count < 24);
+});
+
+test("fitRing: drops the ring when fewer than 3 fit", () => {
+  assert.equal(fitRing({ r: 5, count: 12, emojiPx: 44, overlap: 0, floor: 0.55 }).count, 0);
+});
+
+test("fitRing: overlap lowers the need", () => {
+  const a = fitRing({ r: 50, count: 10, emojiPx: 44, overlap: 0, floor: 0.55 }).scale;
+  const b = fitRing({ r: 50, count: 10, emojiPx: 44, overlap: 0.2, floor: 0.55 }).scale;
+  assert.ok(b > a);
+});
+
+test("fitGap: same-scale neighbours, other-scale neighbour, clamped", () => {
+  assert.ok(near(fitGap({ gap: 33, emojiPx: 44, overlap: 0, floor: 0.55 }), 0.75));
+  // (1.05 + s)/2 * 44 = 44  ->  s = 0.95
+  assert.ok(near(fitGap({ gap: 44, emojiPx: 44, overlap: 0, other: 1.05, floor: 0.55 }), 0.95));
+  assert.equal(fitGap({ gap: 500, emojiPx: 44, overlap: 0, floor: 0.55 }), 1);
+  assert.equal(fitGap({ gap: 1, emojiPx: 44, overlap: 0, floor: 0.55 }), 0.55);
+});
