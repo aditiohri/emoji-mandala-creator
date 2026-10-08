@@ -313,7 +313,12 @@ center, then one `cycle` group per ring (`reverse` on even rings when
 Alternate is on). Fit (slice 2+): `fitRing` per ring, `fitGap` against
 `ringSpacing` (and ring 1 against the center); if the radial gap fails at
 `MIN_SCALE`, `ringSpacing` is raised to the minimum that fits and rings
-beyond `radius` are dropped. "Empty" removes the center emoji. Guides: a
+beyond `radius` are dropped. From slice 2, `ringSpacing` is first
+**clamped** so the outer ring sits within `radius`:
+`ringSpacing = min((spacing/100)·(radius/rings), radius/rings)` (decided
+2026-10-08; today spacing > 1.0× pushes outer rings off the canvas). The
+slice 2 plan must decide what spacing > 1.0× then means, so the slider has
+no dead range. "Empty" removes the center emoji. Guides: a
 circle at each drawn ring's actual radius. `maxEmoji` 6.
 
 **Phyllotaxis spiral** — seed `i = 1..n`: angle `i·divergence`, radius
