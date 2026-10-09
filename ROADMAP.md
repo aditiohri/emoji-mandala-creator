@@ -252,14 +252,14 @@ fixes touch the same UI files, so parallel orchestrators would conflict. Known
 pain: some sliders are hard to use on mobile; drag-reorder of palette chips
 is sticky and unreliable on touch; screen-reader use should be easy.
 
-> **REMINDER (2026-10-09): your turn.** Layer 2 (VoiceOver on the Mac) was
-> skipped (it needed Accessibility permission for Terminal; optional, can be
-> retried). Layer 3 is waiting on you: run
-> [`docs/a11y-device-checklist.md`](docs/a11y-device-checklist.md) on the
-> iPhone (Safari + VoiceOver) and the Samsung tablet (Chrome + TalkBack),
-> then send the results back. Only then does Claude merge the layers into the
-> ranked findings list (step 4 below). Playwright layer 1 is already done, and
-> its findings are held until then.
+> **STATUS (2026-10-09).** Automated audit layers are done (20 findings, held
+> in `~/.tools/playwright/a11y/RESULTS-2026-10-09.md`, outside the repo). New
+> order, decided with the user: **implement the fixes first, then run the
+> device checklist on the fixed app** ([`docs/a11y-device-checklist.md`](docs/a11y-device-checklist.md):
+> iPhone Safari + VoiceOver, Samsung Chrome + TalkBack), so manual testing
+> finds what automation can't rather than what we already know. When the user
+> is back at the laptop: grant Terminal Accessibility permission and run
+> real VoiceOver via Guidepup. Then merge all layers into the findings list.
 
 - [ ] **Audit session** (first). Four layers, merged into one ranked findings
   list written here (severity, file, suggested fix, which fixes touch the
@@ -294,3 +294,18 @@ is cheapest as a Capacitor wrap of the existing web code (store presence,
 native share/photos). Rust has no clear role (no heavy compute, and the
 project is deliberately build-free); revisit only on a real performance wall.
 Item 4's fixes carry over to any wrapper, so nothing is wasted by going first.
+
+## 6. Greeting cards: add a message and send (idea; ideate separately, not started)
+
+Let someone add their own text to a mandala and send it like a greeting card.
+Raised 2026-10-09; to be designed in its own session, after item 4. Open
+questions to settle then:
+- Where the text goes (over the mandala, a frame or caption, or a card layout
+  around it) and how it is styled and wrapped.
+- Filename comes from the message instead of the default
+  `mandala-<date>.png`; share/save sheet text carries the message rather than
+  the default "Emoji mandala" title.
+- Accessibility from the start: the message as real text (alt text for the
+  exported image, readable by screen readers), contrast over any background.
+- Still static and serverless (no accounts); sending means the existing
+  save/share flow.
