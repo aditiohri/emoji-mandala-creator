@@ -25,6 +25,7 @@ export function syncGridActiveStates(){
 export function renderPaletteChips(onChipChange){
   const wrap = document.getElementById("paletteChips");
   wrap.innerHTML = "";
+  wrap.setAttribute("role", "list");
   state.palette.forEach((e, i) => {
     const chip = document.createElement("span");
     chip.className = "palette-chip";
@@ -34,7 +35,10 @@ export function renderPaletteChips(onChipChange){
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "×";
-    remove.setAttribute("aria-label", "Remove " + e);
+    // Duplicates are allowed, so tell copies apart: "Remove 🌸 (2 of 2)".
+    const copies = state.palette.filter(x => x === e).length;
+    const nth = state.palette.slice(0, i + 1).filter(x => x === e).length;
+    remove.setAttribute("aria-label", copies > 1 ? `Remove ${e} (${nth} of ${copies})` : `Remove ${e}`);
     remove.addEventListener("click", () => {
       if (state.palette.length <= 1) return;
       state.palette.splice(i, 1);
@@ -106,7 +110,10 @@ function commitMove(from, to, onChipChange){
 // Drag (mouse or touch) and ←/→ keys reorder the palette.
 function attachReorder(chip, i, onChipChange){
   chip.tabIndex = 0;
+  chip.setAttribute("role", "listitem");
+  chip.setAttribute("aria-label", `${state.palette[i]}, position ${i + 1} of ${state.palette.length}, arrow keys to move`);
   chip.addEventListener("keydown", e => {
+    if (e.target !== chip) return; // keys on the × button don't move the chip
     const to = e.key === "ArrowLeft" ? i - 1 : e.key === "ArrowRight" ? i + 1 : null;
     if (to === null) return;
     e.preventDefault();

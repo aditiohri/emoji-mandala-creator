@@ -184,7 +184,7 @@ input[type="range"]{
   min-height:34px;
 }
 .palette-chip{
-  touch-action:none;
+  touch-action:pan-y;
   user-select:none;
   -webkit-user-select:none;
   cursor:grab;
