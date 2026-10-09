@@ -17,60 +17,220 @@ export function splitEmojiClusters(val){
 }
 
 export function syncGridActiveStates(){
-  document.querySelectorAll(".emoji-chip").forEach(chip => {
-    chip.classList.toggle("active", state.palette.includes(chip.textContent));
+  document.querySelectorAll("#emojiGrid .emoji-chip").forEach(chip => {
+    const on = state.palette.includes(chip.textContent);
+    chip.classList.toggle("active", on);
+    chip.setAttribute("aria-pressed", String(on));
   });
 }
 
-export function renderPaletteChips(onChipChange){
+// Palette UI state: the selected chip (null = none), the chip that holds the
+// row's single Tab stop, and the latest change callback.
+let selected = null;
+let rover = 0;
+let notify = null;
+let statusFlip = false;
+
+const chipEls = () => [...document.querySelectorAll("#paletteChips .palette-chip")];
+
+// Polite status for moves and removals. Alternating a trailing nbsp makes a
+// repeated message announce again.
+function say(text){
+  const el = document.getElementById("paletteStatus");
+  if (!el) return;
+  statusFlip = !statusFlip;
+  el.textContent = text + (statusFlip ? "\u00a0" : "");
+}
+
+function changed(){ if (notify) notify(); }
+
+function focusChip(i, opts){
+  const chips = chipEls();
+  if (i < 0 || !chips.length) return;
+  chips[Math.min(i, chips.length - 1)].focus(opts);
+}
+
+function setRover(i){
+  rover = i;
+  chipEls().forEach((c, j) => { c.tabIndex = j === i ? 0 : -1; });
+}
+
+// Show or hide the toolbar for the selected chip and sync aria-pressed.
+function updateToolbar(){
+  const bar = document.getElementById("paletteToolbar");
+  const n = state.palette.length;
+  chipEls().forEach((c, j) => c.setAttribute("aria-pressed", String(j === selected)));
+  if (!bar) return;
+  bar.hidden = selected === null;
+  if (selected === null) return;
+  document.getElementById("paletteToolbarLabel").textContent =
+    `${state.palette[selected]} position ${selected + 1} of ${n}:`;
+  document.getElementById("paletteEarlier").setAttribute("aria-disabled", String(selected === 0));
+  document.getElementById("paletteLater").setAttribute("aria-disabled", String(selected === n - 1));
+  document.getElementById("paletteRemove").setAttribute("aria-disabled", String(n <= 1));
+}
+
+function select(i){
+  selected = selected === i ? null : i;
+  updateToolbar();
+}
+
+// Where a selected index lands after moveItem(from, to).
+function trackSelected(sel, from, to){
+  if (sel === null) return null;
+  if (sel === from) return to;
+  if (from < to && sel > from && sel <= to) return sel - 1;
+  if (from > to && sel >= to && sel < from) return sel + 1;
+  return sel;
+}
+
+// Remove chip i. Returns false (and says why) when it is the last emoji.
+function removeChip(i){
+  if (state.palette.length <= 1){
+    say("Can't remove your last emoji");
+    return false;
+  }
+  const [e] = state.palette.splice(i, 1);
+  selected = null;
+  buildChips();
+  syncGridActiveStates();
+  const next = focusAfterRemove(i, state.palette.length);
+  setRover(next);
+  focusChip(next);
+  say(`${e} removed, ${state.palette.length} emoji left`);
+  changed();
+  return true;
+}
+
+// Move chip `from` to `to`; the caller says where focus goes afterwards.
+function moveChip(from, to){
+  const e = state.palette[from];
+  moveItem(state.palette, from, to);
+  selected = trackSelected(selected, from, to);
+  buildChips();
+  say(`${e} moved to position ${to + 1} of ${state.palette.length}`);
+  changed();
+}
+
+function wireToolbar(){
+  const bar = document.getElementById("paletteToolbar");
+  if (!bar || bar.dataset.wired) return;
+  bar.dataset.wired = "1";
+  const act = (id, fn) => document.getElementById(id).addEventListener("click", fn);
+  act("paletteEarlier", () => {
+    if (selected === null || selected === 0) return;
+    const from = selected;
+    moveChip(from, from - 1);
+    setRover(selected);
+  });
+  act("paletteLater", () => {
+    if (selected === null || selected >= state.palette.length - 1) return;
+    const from = selected;
+    moveChip(from, from + 1);
+    setRover(selected);
+  });
+  act("paletteRemove", () => { if (selected !== null) removeChip(selected); });
+  bar.addEventListener("keydown", e => {
+    if (e.key !== "Escape" || selected === null) return;
+    e.preventDefault();
+    const i = selected;
+    selected = null;
+    updateToolbar();
+    setRover(i);
+    focusChip(i);
+  });
+}
+
+function buildChips(){
   const wrap = document.getElementById("paletteChips");
   wrap.innerHTML = "";
-  wrap.setAttribute("role", "list");
+  wrap.setAttribute("role", "group");
+  wrap.setAttribute("aria-label", "Your palette");
+  rover = Math.max(0, Math.min(rover, state.palette.length - 1));
   state.palette.forEach((e, i) => {
-    const chip = document.createElement("span");
+    const chip = document.createElement("button");
+    chip.type = "button";
     chip.className = "palette-chip";
-    const label = document.createElement("span");
-    label.textContent = e;
-    chip.appendChild(label);
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.textContent = "×";
-    // Duplicates are allowed, so tell copies apart: "Remove 🌸 (2 of 2)".
-    const copies = state.palette.filter(x => x === e).length;
-    const nth = state.palette.slice(0, i + 1).filter(x => x === e).length;
-    remove.setAttribute("aria-label", copies > 1 ? `Remove ${e} (${nth} of ${copies})` : `Remove ${e}`);
-    remove.addEventListener("click", () => {
-      if (state.palette.length <= 1) return;
-      state.palette.splice(i, 1);
-      renderPaletteChips(onChipChange);
-      syncGridActiveStates();
-      if (onChipChange) onChipChange();
-    });
-    chip.appendChild(remove);
-    attachReorder(chip, i, onChipChange);
+    chip.textContent = e;
+    chip.tabIndex = i === rover ? 0 : -1;
+    chip.setAttribute("aria-label", chipLabel(e, i, state.palette.length));
+    attachChip(chip, i);
     wrap.appendChild(chip);
   });
+  updateToolbar();
+}
+
+export function renderPaletteChips(onChipChange){
+  notify = onChipChange;
+  wireToolbar();
+  // Outside changes (saved palette, Quick add, typed emoji) clear the selection
+  // and leave focus where the person is working; a focused chip keeps its slot.
+  const wrap = document.getElementById("paletteChips");
+  const at = wrap.contains(document.activeElement) ? chipEls().indexOf(document.activeElement) : -1;
+  selected = null;
+  buildChips();
+  if (at >= 0) focusChip(at);
+}
+
+// Pure helpers (unit-tested).
+export function chipLabel(emoji, i, total){
+  return `${emoji}, position ${i + 1} of ${total}`;
+}
+
+export function focusAfterRemove(index, newLength){
+  return newLength <= 0 ? -1 : Math.min(index, newLength - 1);
+}
+
+// New index for a roving-tabindex key; clamped, no wrap.
+export function rovingNext(i, key, count, cols){
+  const clamp = n => Math.max(0, Math.min(count - 1, n));
+  switch (key){
+    case "ArrowLeft": return clamp(i - 1);
+    case "ArrowRight": return clamp(i + 1);
+    case "ArrowUp": return clamp(i - cols);
+    case "ArrowDown": return clamp(i + cols);
+    case "Home": return 0;
+    case "End": return count - 1;
+    default: return i;
+  }
 }
 
 export function renderEmojiGrid(onChipChange){
   const grid = document.getElementById("emojiGrid");
-  PICKER_EMOJI.forEach(e => {
-    const chip = document.createElement("div");
-    chip.className = "emoji-chip" + (state.palette.includes(e) ? " active" : "");
+  grid.setAttribute("role", "group");
+  grid.setAttribute("aria-label", "Quick add emoji");
+  const buttons = PICKER_EMOJI.map((e, i) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    const on = state.palette.includes(e);
+    chip.className = "emoji-chip" + (on ? " active" : "");
     chip.textContent = e;
+    chip.tabIndex = i === 0 ? 0 : -1;
+    chip.setAttribute("aria-pressed", String(on));
     chip.addEventListener("click", () => {
-      const i = state.palette.lastIndexOf(e); // drop the newest copy, keeping the early slots stable
-      if (i >= 0){
-        if (state.palette.length > 1) state.palette.splice(i,1);
+      const j = state.palette.lastIndexOf(e); // drop the newest copy, keeping the early slots stable
+      if (j >= 0){
+        if (state.palette.length > 1) state.palette.splice(j,1);
       } else {
         state.palette.push(e);
         recordUse(e);
       }
-      chip.classList.toggle("active", state.palette.includes(e));
+      syncGridActiveStates();
       renderPaletteChips(onChipChange);
       if (onChipChange) onChipChange();
     });
+    chip.addEventListener("focus", () => buttons.forEach(b => { b.tabIndex = b === chip ? 0 : -1; }));
     grid.appendChild(chip);
+    return chip;
+  });
+  grid.addEventListener("keydown", e => {
+    const i = buttons.indexOf(document.activeElement);
+    if (i < 0 || e.altKey || e.ctrlKey || e.metaKey) return;
+    const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").length;
+    const to = rovingNext(i, e.key, buttons.length, cols);
+    if (!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End"].includes(e.key)) return;
+    e.preventDefault();
+    buttons[to].focus();
   });
 }
 
@@ -86,7 +246,7 @@ export function cueText(label, used, total){
   if (used >= total) return total === 1
     ? `${label} is using your 1 emoji`
     : `${label} is using all ${total} of your emoji`;
-  return `${label} is using ${used} of your ${total} emoji — drag one forward to use it`;
+  return `${label} is using ${used} of your ${total} emoji — move one earlier to use it`;
 }
 
 // Dim the chips the mandala doesn't use and update the caption.
@@ -100,26 +260,36 @@ export function updatePaletteCue(used, label){
 }
 
 const DRAG_START_PX = 6;
+let dragJustEnded = false;
 
-function commitMove(from, to, onChipChange){
-  moveItem(state.palette, from, to);
-  renderPaletteChips(onChipChange);
-  if (onChipChange) onChipChange();
-}
-
-// Drag (mouse or touch) and ←/→ keys reorder the palette.
-function attachReorder(chip, i, onChipChange){
-  chip.tabIndex = 0;
-  chip.setAttribute("role", "listitem");
-  chip.setAttribute("aria-label", `${state.palette[i]}, position ${i + 1} of ${state.palette.length}, arrow keys to move`);
+// Mouse or touch drag, Shift+←/→, Delete and the selection toolbar edit the palette.
+function attachChip(chip, i){
+  chip.addEventListener("focus", () => setRover(i));
+  chip.addEventListener("click", () => {
+    if (dragJustEnded) return; // the click that follows a drag must not select
+    select(i);
+  });
   chip.addEventListener("keydown", e => {
-    if (e.target !== chip) return; // keys on the × button don't move the chip
-    const to = e.key === "ArrowLeft" ? i - 1 : e.key === "ArrowRight" ? i + 1 : null;
-    if (to === null) return;
-    e.preventDefault();
-    if (to < 0 || to >= state.palette.length) return;
-    commitMove(i, to, onChipChange);
-    document.querySelectorAll("#paletteChips .palette-chip")[to].focus();
+    const n = state.palette.length;
+    if (e.key === "Delete" || e.key === "Backspace"){
+      e.preventDefault();
+      removeChip(i);
+    } else if (e.key === "Escape"){
+      if (selected === null) return;
+      e.preventDefault();
+      selected = null;
+      updateToolbar();
+    } else if (e.shiftKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")){
+      e.preventDefault();
+      const to = e.key === "ArrowLeft" ? i - 1 : i + 1;
+      if (to < 0 || to >= n) return;
+      moveChip(i, to);
+      setRover(to);
+      focusChip(to);
+    } else if (["ArrowLeft","ArrowRight","Home","End"].includes(e.key) && !e.altKey && !e.ctrlKey && !e.metaKey){
+      e.preventDefault();
+      focusChip(rovingNext(i, e.key, n, 1));
+    }
   });
   chip.addEventListener("pointerdown", e => {
     if (e.button !== 0) return;
@@ -136,7 +306,7 @@ function attachReorder(chip, i, onChipChange){
       if (!dragging){
         if (Math.hypot(dx, dy) < DRAG_START_PX) return;
         dragging = true;
-        // Capture only now, so a tap on × still reaches the × button.
+        // Capture only now, so a plain tap is an ordinary click.
         chip.setPointerCapture(ev.pointerId);
         chip.classList.add("dragging");
       }
@@ -154,9 +324,14 @@ function attachReorder(chip, i, onChipChange){
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);
       if (!dragging) return;
-      // Reorder only on pointerup: renderPaletteChips rebuilds the list.
+      dragJustEnded = true;
+      setTimeout(() => { dragJustEnded = false; }, 0);
+      // Reorder only on pointerup: buildChips rebuilds the row.
       if (ev.type === "pointerup" && target !== i){
-        commitMove(i, target, onChipChange);
+        selected = null;
+        moveChip(i, target);
+        setRover(target);
+        focusChip(target, { preventScroll: true });
       } else {
         chip.classList.remove("dragging");
         chip.style.transform = "";

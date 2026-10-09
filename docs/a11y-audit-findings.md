@@ -6,7 +6,7 @@ Live status below. Re-run the scripts (kept outside the repo in `~/.tools/playwr
 - DONE slice A (commit 84e0545): F1, F3, F11, F14, F15, F19.
 - DONE slice B (commit 6eefc85): F7, F10, F13 focus ring only, F18.
 - DONE slice D (phone layout, spec `docs/superpowers/specs/2026-10-09-phone-layout-design.md`): F2, F8 (all but chip ×), F9, F16, F17. F9 needed a small JS guard in `main.js` (`touch-action: pan-y` alone did not stop the value jumping); confirm on the Samsung.
-- Slice C (palette, not designed yet): F4, F5, F6, F12, F13 focus-after-remove, F8 chip ×.
+- DONE slice C (palette, spec `docs/superpowers/specs/2026-10-09-palette-a11y-design.md`): F4, F5 (closed by the select-then-toolbar path, WCAG 2.5.7; cross-row touch drag is a later slice), F6, F12, F13 focus-after-remove, F8 chip ×. Quick add and the chip row are 1 Tab stop each; the toolbar adds 3. Re-check on iPhone VoiceOver and Samsung TalkBack.
 - Later: F20.
 Scripts in this dir: a1-axe, a2-tree-kbd, a3-kbd, a4-touch, a5-layout, c1-vsr (virtual SR), d-misc, e-fc. Run: `node X.mjs <app-dir> <out-dir>`.
 Layer 2 (real VoiceOver) skipped: Terminal lacked Accessibility permission. Layer 3 (devices) pending user: docs/a11y-device-checklist.md.

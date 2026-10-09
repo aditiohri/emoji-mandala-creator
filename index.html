@@ -48,6 +48,13 @@
       <div class="field">
         <h3 class="group-label">Your palette</h3>
         <div class="palette-chips" id="paletteChips"></div>
+        <div class="palette-toolbar" id="paletteToolbar" role="toolbar" aria-label="Edit selected emoji" hidden>
+          <span class="palette-toolbar-label" id="paletteToolbarLabel"></span>
+          <button type="button" class="btn small" id="paletteEarlier"><span aria-hidden="true">◀</span> Earlier</button>
+          <button type="button" class="btn small" id="paletteLater">Later <span aria-hidden="true">▶</span></button>
+          <button type="button" class="btn small" id="paletteRemove"><span aria-hidden="true">✕</span> Remove</button>
+        </div>
+        <p class="sr-only" id="paletteStatus" role="status"></p>
         <p class="hint palette-cue" id="paletteCue" aria-live="polite"></p>
         <div class="custom-row">
           <input type="text" id="customEmoji" placeholder="tap here, then use your emoji keyboard" maxlength="20">

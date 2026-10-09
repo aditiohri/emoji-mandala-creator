@@ -283,14 +283,13 @@ is sticky and unreliable on touch; screen-reader use should be easy.
   strip about 33vh, collapsible sections with Show/Hide all, 44 px touch
   targets, slider-swipe fix, landscape two-column).
   **C, palette** (Quick add as buttons, select-then-toolbar reorder and
-  remove, fewer tab stops) is NEXT: designed 2026-10-09, spec
-  `docs/superpowers/specs/2026-10-09-palette-a11y-design.md` (then /clear, then
-  build). **Later slice E, touch drag:** long-press to lift a chip and drag it
+  remove, fewer tab stops) is DONE 2026-10-09, spec
+  `docs/superpowers/specs/2026-10-09-palette-a11y-design.md`; re-check on
+  devices. **Later slice E, touch drag:** long-press to lift a chip and drag it
   across rows (the toolbar already meets WCAG 2.5.7, so this is a bonus).
   D is merged, so
   the palette section now lives in a collapsible `#section-palette-body`;
-  chips and their × stay under 44/24 px until C. Also open for C: F13
-  focus-after-remove. Device checklist (`docs/a11y-device-checklist.md`) is
+  Device checklist (`docs/a11y-device-checklist.md`) is
   still pending the user; it may add palette findings, so ask whether results
   are in before designing.
 - [ ] **Fix slices**, original note, cut from the findings. Likely shapes: native or proper

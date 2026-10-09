@@ -260,9 +260,12 @@ input[type="range"]{
   gap:6px;
 }
 .emoji-chip{
+  font:inherit;
   font-size:1.15rem;
   line-height:1;
+  color:inherit;
   padding:6px 0;
+  min-height:24px;
   text-align:center;
   border-radius:10px;
   border:1px solid transparent;
@@ -276,6 +279,7 @@ input[type="range"]{
   border-color:var(--coral);
   background:color-mix(in srgb, var(--coral) 16%, var(--paper-2));
 }
+.emoji-chip:focus-visible{ outline:2px solid var(--coral-text); outline-offset:2px; }
 
 .palette-chips{
   display:flex;
@@ -290,31 +294,22 @@ input[type="range"]{
   cursor:grab;
   display:inline-flex;
   align-items:center;
-  gap:4px;
+  justify-content:center;
+  font:inherit;
   font-size:1rem;
-  padding:4px 4px 4px 10px;
+  line-height:1;
+  color:inherit;
+  min-width:36px;
+  min-height:32px;
+  padding:4px 10px;
   border-radius:999px;
   background:var(--paper-2);
-  border:1px solid var(--line);
+  border:2px solid var(--line);
 }
-.palette-chip button{
-  all:unset;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  font-size:0.7rem;
-  line-height:1;
-  color:var(--text-dim);
-  cursor:pointer;
+.palette-chip[aria-pressed="true"]{
+  border-color:var(--coral-text);
+  background:color-mix(in srgb, var(--coral) 22%, var(--paper-2));
 }
-.palette-chip button:hover{
-  background:color-mix(in srgb, var(--coral) 20%, transparent);
-  color:var(--coral);
-}
-.palette-chip button:focus-visible{ outline:2px solid var(--coral-text); outline-offset:1px; }
 .palette-chip.unused{ opacity:0.4; }
 .palette-chip.dragging{
   position:relative;
@@ -324,6 +319,17 @@ input[type="range"]{
 }
 .palette-chip.drop-target{ outline:2px dashed var(--coral); outline-offset:2px; }
 .palette-chip:focus-visible{ outline:2px solid var(--coral-text); outline-offset:2px; }
+.palette-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  margin-top:8px;
+}
+.palette-toolbar-label{ font-size:0.85rem; margin-right:2px; }
+.palette-toolbar .btn{ min-height:32px; }
+.palette-toolbar .btn[aria-disabled="true"]{ opacity:0.5; cursor:default; }
+.palette-toolbar .btn:focus-visible{ outline:2px solid var(--coral-text); outline-offset:2px; }
 .palette-cue{ margin:6px 0 0; }
 
 .saved-head{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
@@ -667,7 +673,7 @@ emoji-picker{
   gap:22px;
 }
 
-/* Touch: every control at least 44px in its smaller dimension (chips are slice C). */
+/* Touch: every control at least 44px in its smaller dimension. */
 @media (pointer: coarse){
   .btn, .btn.small{ min-height:44px; }
   .saved-load, .saved-input, .saved-row .btn{ min-height:44px; }
@@ -676,6 +682,8 @@ emoji-picker{
   .custom-bg-row input[type="file"]{ min-height:44px; }
   .bg-custom-section summary{ min-height:44px; display:flex; align-items:center; }
   .emoji-chip{ min-height:44px; }
+  .palette-chip{ min-height:44px; min-width:44px; }
+  .palette-toolbar .btn{ min-height:44px; }
   .bg-preset{ width:48px; height:48px; } /* 44px inside the border */
   /* 24px badge poking 10px out of the corner, so 26px of the swatch stays clear; the gap keeps it off the next swatch */
   .bg-presets{ gap:12px; }
@@ -712,6 +720,9 @@ emoji-picker{
   .bg-preset{ forced-color-adjust:none; border-color:ButtonText; }
   .bg-preset.active{ outline:3px solid Highlight; outline-offset:1px; }
   .emoji-chip.active{ border:2px solid Highlight; }
+  .palette-chip{ border-color:ButtonText; }
+  .palette-chip[aria-pressed="true"]{ border-color:Highlight; border-width:4px; }
+  .palette-toolbar .btn[aria-disabled="true"]{ opacity:1; color:GrayText; border-color:GrayText; }
   input[type="range"]::-webkit-slider-runnable-track{ forced-color-adjust:none; background:ButtonText; }
   input[type="range"]::-moz-range-track{ forced-color-adjust:none; background:ButtonText; }
   input[type="range"]::-webkit-slider-thumb{ forced-color-adjust:none; background:Canvas; border-color:ButtonText; }
