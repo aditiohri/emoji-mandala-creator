@@ -1,6 +1,6 @@
 # Customizable mandala shapes — design
 
-Status: approved (2026-10-08), revised after two reviews; toggles decided 2026-10-08 (§1, §4); lotus decided 2026-10-08 (§1 "Lotus", §5). Tracker: `ROADMAP.md` item 1.
+Status: approved (2026-10-08), revised after two reviews; toggles decided 2026-10-08 (§1, §4); lotus decided 2026-10-08 (§1 "Lotus", §5); yantra decided 2026-10-08 (§1 "Yantra", §5). Tracker: `ROADMAP.md` item 1.
 Each slice in §6 gets its own implementation plan.
 
 ## 1. Intent
@@ -40,6 +40,7 @@ shape and every combination of palette and control values:
 | Crowded groups | *(2026-10-08, slice 3 design, chosen from screenshots of four options)* **When crowded, remove elements and keep the structure; never jump to an unrelated count.** Rings: a ring that can't hold its full `symmetry` at the floor scale is **dropped**, not re-spaced with fewer emoji, so the crowded core becomes an open halo around the center emoji instead of a scatter of unrelated counts (8, 15, 21 around 24 spokes). Rejected: snapping to a divisor of symmetry (still busy for odd symmetry), halving, keeping slice 2's behaviour. Spiral: lower the seed count, and drop the seeds that would hit the center emoji. Later shapes follow the same rule (fewer petals/detail/grid dots, never an irregular layout). |
 | Phone chip drag | *(2026-10-08, slice 3 design)* Chips use `touch-action: pan-y`: a vertical swipe that starts on a chip scrolls the page (with `none` it was blocked); a drag that starts sideways reorders, and may then move in any direction, including across rows. Press-and-hold was rejected as more code and more iOS-specific risk. |
 | Lotus | *(2026-10-08, slice 4 design, chosen from screenshot grids)* Petals are **outlined**: a tip emoji plus emoji spaced about one emoji apart along both sides of a pointed-arch outline (open base, widest a third of the way up), not the 3 emoji per petal first written here, which read as scattered dots. Layers fill the space from the center emoji to `radius` with **outer bands wider**, leaving no gaps. The slider is **"Petal width"** (how much of the room to the neighbouring petal a petal takes), not "Petal length". **Layers 1–3**: at 4, layers tangle into one mass. Crowding: the petal count never changes; a petal too narrow for two sides becomes a **spoke** (emoji down its axis). Rejected: dropping layers whose petals are thin (it emptied the canvas at emoji size 80), fewer petals. `polygonPoints` waits for yantra (slice 5). |
+| Yantra | *(2026-10-08, slice 5 design, chosen from screenshot grids)* The §5 text first written here did not survive prototyping, and is rewritten. **Lotus layer: outlined petals** (the Lotus shape's outline), not tips only, which read as scattered dots; a petal is an outline or a spoke, **whichever keeps more emoji** (the Lotus shape's widest-point test alone left 16 narrow petals as a tip plus one side pair, a ring of dots at their bases). **Hexagram: two full triangle lines** with the six crossings as "knots"; leaving the inner hexagon's sides empty showed six clumps, not two triangles. Lines crossing at 60° keep their neighbours one step apart, so full lines never overlap. **Lines at 0.65× the emoji size** (the bindu stays 1.05): at full size the lines were sparse dots and nested stars clumped. **Nested stars turn 30°** each level, tips pointing at the outer star's knots, at the floor scale; the star grows as Triangles rises. **Gates: classic T outline** (opening, narrow neck, wider head) on the square's lattice. Rejected: a T of stem and bar, a gateway of posts and lintel, no gates. **Edge detail is removed**: with full lines the density is set by fit, so the slider had nothing to do; no third control replaces it. Alternate is **"Offset petals"** (half a petal, default off). |
 | Build order | Engine → pattern/palette rules → spiral (+ strip, per-shape controls) → lotus → yantra → kolam. |
 
 **Assumptions (not stated by the user):** the chosen shape and its settings
@@ -80,7 +81,8 @@ center). At least one ring is always drawn (checked over every slider value).
 ```
 js/shapes/index.js     registry: ordered SHAPES list, getShape(id)
 js/shapes/lib.js       shared geometry: polar(), chord(), fitRing(), fitGap(),
-                       petalCurve() (slice 4), polygonPoints() (slice 5)
+                       petalCurve() (slice 4), polygonPoints(), petalOutline(),
+                       petalSpoke() (slice 5; the last two moved from lotus.js)
 js/shapes/rings.js     Concentric rings (port of today's draw loop)
 js/shapes/spiral.js    Phyllotaxis spiral
 js/shapes/lotus.js     Lotus / rosette
@@ -177,7 +179,7 @@ groups: [{ size, kind, slot?, reverse?, ring? }]
    their reversed emit order cancels it. Rings' Alternate is visible
    through its half-step offset.)
 5. `used` = the set of palette indices actually drawn (usually a prefix,
-   but not always — e.g. a yantra with an empty center skips slot 0). The
+   but not always — e.g. U = 2 with only solid groups in slots 1 and 3). The
    palette cue dims exactly the chips not in `used`.
 
 Guarantees criteria 1, 3 and 4 by construction; unit-tested directly.
@@ -430,27 +432,65 @@ no sides group. "Empty" removes the center emoji. With an odd `P` that
 neither 2 nor 3 divides, each group is a single emoji (§1 accepted
 consequence).
 
-**Yantra** — inside out, with fixed role slots:
-- bindu (center, slot 0);
-- hexagrams (slot 1): Triangles control 1–3 nested up/down triangle pairs.
-  Each hexagram places emoji on its 6 star tips plus `detail` evenly spaced
-  points on each of its 12 outer edges (tip → crossing), all in one `cycle`
-  group of size 6 indexed by star arm — so with p = 2 the up and down
-  triangles take different emoji. Its 6 crossing points form a second
-  group (slot 2, size 6). Nothing is placed on the inner hexagon's sides,
-  which keeps every point clear of the crossings. Nested pairs **swap
-  slots** (odd pairs: star slot 2, crossings slot 1) so adjacent pairs
-  differ even with p = 2. Fit: edge points are spaced `segLen/(detail+1)`;
-  if that is under the need at the floor, lower `detail` (to 0) for that
-  hexagram, then drop inner hexagrams that still don't fit;
-- one lotus layer (slot 3) via `lib.petalCurve`, tips only;
-- bhupura square (slot 4, `solid`): emoji on the corners and evenly along
-  each side, the same count per side, skipping the gate opening;
-- four T-gates (slot 5, `solid`) at the side midpoints.
+**Yantra** *(rewritten 2026-10-08 in the slice 5 design, §1 "Yantra")*.
+Label "Yantra". Controls: Triangles 1–3 (default 1), Petals 8–16 step 4
+(default 8; always a multiple of 4, so the lotus keeps the square's four-fold
+symmetry). Alternate **"Offset petals"** (default off): the lotus turns by
+half a petal, so its petals flank the gates instead of pointing at them.
+`maxEmoji` 6, `overlap` 0.15 (as the lotus). Lines use the line scale
+`ls = max(floor, 0.65)`; the bindu is 1.05; `need(a, b) =
+emojiSize·(a+b)/2·(1-overlap)`.
 
-Controls: Triangles 1–3 (default 1), Petals 8–16 step 4 (default 8), Edge
-detail 0–3 (default 1). Alternate ("Interleave petals"): petals offset by
-half a petal. "Empty" removes the bindu emoji. `maxEmoji` 6.
+1. **Bhupura.** A square with its corners on `radius` (half-side `h =
+   radius/√2`), on a lattice of step `d = h/q`, `q = max(1, ⌊h/(emojiSize·ls)⌋)`:
+   `lib.polygonPoints(4, radius, -3π/4, 2q)`. Heading: the side's outward
+   normal (corners: radial).
+2. **Gates.** In the band from the square's side to `radius`, `n = ⌊(radius
+   - h)/d⌋` lattice steps deep (2 at emoji size 80, 4 at 44, 9 at 20), each
+   side gets a classic T outline on the same lattice: neck half-width
+   `w1 = max(1, round(n/4))`, head half-width `w2 = 2·w1`, neck length
+   `a = ⌊n/2⌋`. Lattice cells (steps out `j`, across `t`): the neck `(1..a,
+   ±w1)`, the shoulder `(a, ±(w1+1..w2))`, the head's sides `(a+1..n, ±w2)`
+   and its top `(n, 1-w2..w2-1)`. The square's points with `|i - q| < w1` are
+   left out (the opening). Heading: the gate's axis. If `n < 2` there are no
+   gates and no opening (never in the 20–80 emoji size range).
+3. **Outer star.** Lotus tips sit at `T = h - need(ls, ls)`; the outer star
+   has circumradius `R1 = (0.58 + 0.08·(triangles - 1))·T`. A star of
+   circumradius `R` is two triangles, up (vertex at -π/2) and down (+π/2),
+   each `lib.polygonPoints(3, R, start, 3m)` with `m = max(1,
+   ⌊(R/√3)/(emojiSize·s)⌋)`, so each side is split in thirds at the crossings
+   (the **knots**, `i = m, 2m`, taken from the up triangle). Points next to a
+   crossing are one step apart (the lines cross at 60°). Heading: the side's
+   outward normal (vertices: radial).
+4. **Lotus.** One ring of `P` petals with axes at `-π/2 + 2πj/P` (+ `π/P`
+   with Offset): base `B = R1`, tips `T`, width 80 % of the half-petal angle,
+   capped as the Lotus shape's (§5 Lotus 4). The petal is built both as
+   `lib.petalOutline` and as `lib.petalSpoke`; whichever keeps more emoji is
+   used. Heading: the petal's axis.
+5. **Inner stars** `k = 1..triangles-1`: turned `k·30°`, scale `floor`,
+   `R_k = R_{k-1}/√3 - need(floor, s_{k-1})`, so their tips point at, and
+   clear, the outer star's knots.
+6. **Crowding** (§1 "Crowded groups"). Everything is placed in the order
+   above (bindu, square, gates, outer star, lotus, inner stars). A unit (a
+   point with all its symmetric copies) is kept only if each point clears
+   everything kept so far and the rest of the unit, so every part stays
+   symmetric. Star units: the six vertices (if they fail, that star and every
+   star inside it are dropped), then the knots, then the points `i` and
+   `3m - i` on every side of both triangles, from the vertices inward.
+   Lotus units: as the Lotus shape (tip, then side pairs or spoke emoji, in
+   every petal at once). The square and gates sit on a lattice of step
+   `d ≥ emojiSize·ls` and always fit; the lotus's tips and the outer star
+   always fit too (checked by the sweep). Inner stars drop first: at emoji
+   size 56 and above, Triangles 3 draws two stars.
+
+Groups inside out, with fixed role slots: bindu (`solid`, slot 0); per star
+from the innermost, up triangle (`solid`, slot 1), down triangle (`solid`,
+slot 2), knots (`solid`, slot 0, echoing the bindu); lotus (`cycle`, size
+`P`, index = petal number, slot 3, so petals alternate with p = 2); square
+(`solid`, slot 5); gates (`solid`, slot 4). Consecutive groups always have
+different slots. "Empty" removes the bindu (the knots keep slot 0). Layout
+cost: about 1.5 ms for a thumbnail, up to about 9 ms at emoji size 20 with
+Triangles 3 and 16 petals.
 
 **Kolam / rangoli lattice** — square grid of `g × g` dots (Grid 3–11 odd,
 default 7), `kmax = (g-1)/2`, cell `s = radius/(kmax·√2) · spacing/100`
@@ -496,7 +536,8 @@ subagents, screenshot-verified by me before merge, and ticked off in
    Shuffle picks a shape.**
 4. **Lotus** (adds `petalCurve`; `polygonPoints` moves to slice 5, which is
    the only shape that needs it).
-5. **Yantra** (adds `polygonPoints`).
+5. **Yantra** (adds `polygonPoints`; moves the lotus's `outline`/`spoke`
+   into `lib.js` as `petalOutline`/`petalSpoke`, no change to the lotus).
 6. **Kolam / rangoli lattice.**
 
 ## 7. Testing
