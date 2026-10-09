@@ -287,9 +287,17 @@ function renderBackgroundPresets() {
       swatch.appendChild(removeBtn);
     }
 
-    swatch.addEventListener("click", () => setBackground(bg, idx));
+    swatch.addEventListener("click", () => selectBackground(bg, idx));
     presetsDiv.appendChild(swatch);
   });
+}
+
+// Stored image swatches only carry a data URL; load it before selecting.
+function selectBackground(bg, idx) {
+  if (bg.type !== "image" || bg.imageElement) return setBackground(bg, idx);
+  const img = new Image();
+  img.onload = () => setBackground({ ...bg, imageElement: img }, idx);
+  img.src = bg.dataUrl;
 }
 
 // `idx` is the swatch's position in presets + customs (see activeBackgroundIndex).
