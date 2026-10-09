@@ -8,11 +8,19 @@ export function renderBlob(){
   return new Promise(resolve => canvas.toBlob(resolve, "image/png"));
 }
 
+// Say what happened to the Save/Share button, which only changes its own text.
+function announce(message){
+  const el = document.getElementById("actionStatus");
+  el.textContent = "";
+  setTimeout(() => { el.textContent = message; }, 50);
+}
+
 export function showExportImage(dataUrl){
   const exportPanel = document.getElementById("exportPanel");
   const exportImg = document.getElementById("exportImg");
   exportImg.src = dataUrl;
   exportPanel.hidden = false;
+  announce("Your mandala is ready below. Press and hold the image to save or share it.");
   exportPanel.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
@@ -36,6 +44,7 @@ export function setupSaveButton(){
     const original = btn.textContent;
     const reset = () => setTimeout(() => { btn.textContent = original; }, 1800);
     btn.textContent = "Rendering…";
+    announce("Rendering your mandala");
 
     const filename = mandalaFilename();
     const dataUrl = canvas.toDataURL("image/png");
@@ -51,7 +60,7 @@ export function setupSaveButton(){
     if (downloads && blob){
       try{
         await downloads.save({ filename, data: blob });
-        btn.textContent = "Saved ✓"; reset(); return;
+        btn.textContent = "Saved ✓"; announce("Mandala saved"); reset(); return;
       } catch(err){ /* fall through */ }
     }
     // 2. Touch devices with Web Share API: OS share sheet (Save to Photos, etc).
@@ -60,10 +69,10 @@ export function setupSaveButton(){
         const file = new File([blob], filename, { type: "image/png" });
         if (navigator.canShare({ files: [file] })){
           await navigator.share({ files: [file], title: "Emoji mandala" });
-          btn.textContent = "Shared ✓"; reset(); return;
+          btn.textContent = "Shared ✓"; announce("Mandala shared"); reset(); return;
         }
       } catch(err){
-        if (err && err.name === "AbortError"){ btn.textContent = original; return; }
+        if (err && err.name === "AbortError"){ btn.textContent = original; announce("Sharing cancelled"); return; }
       }
     }
     // 3. Desktop: direct download straight to the Downloads folder, no prompts.
@@ -76,7 +85,7 @@ export function setupSaveButton(){
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      btn.textContent = "Saved ✓"; reset(); return;
+      btn.textContent = "Saved ✓"; announce("Mandala saved to your downloads as " + filename); reset(); return;
     }
     // 4. Fallback: inline image to long-press / right-click.
     showExportImage(dataUrl);
@@ -93,10 +102,12 @@ export function setupShareButton(){
     shareBtn.addEventListener("click", async () => {
       const original = shareBtn.textContent;
       shareBtn.textContent = "Rendering…";
+      announce("Rendering your mandala");
       const blob = await renderBlob();
       try{
         const file = new File([blob], mandalaFilename(), { type: "image/png" });
         await navigator.share({ files: [file], title: "Emoji mandala" });
+        announce("Mandala shared");
       } catch(err){ /* cancelled or unsupported at call time */ }
       shareBtn.textContent = original;
     });

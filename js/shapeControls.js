@@ -23,15 +23,18 @@ export function renderShapeControls(onChange){
     const val = document.createElement("span");
     val.className = "val";
     val.id = `shape-${c.key}-val`;
+    val.setAttribute("aria-hidden", "true");
     val.textContent = format(params[c.key]);
     label.append(c.label + " ", val);
     const input = document.createElement("input");
     // min/max/step before value, or the browser snaps value to the old step.
     Object.assign(input, { type: "range", id: `shape-${c.key}`, min: c.min, max: c.max, step: c.step });
     input.value = params[c.key];
+    input.setAttribute("aria-valuetext", format(params[c.key]));
     input.addEventListener("input", () => {
       params[c.key] = Number(input.value);
       val.textContent = format(params[c.key]);
+      input.setAttribute("aria-valuetext", val.textContent);
       onChange();
     });
     field.append(label, input);

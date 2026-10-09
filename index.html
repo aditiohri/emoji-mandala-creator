@@ -34,14 +34,15 @@
 
   <main>
     <div class="stage">
+      <p class="sr-only" id="mandalaStatus" role="status"></p>
       <div class="canvas-wrap">
-        <canvas id="canvas" width="1000" height="1000"></canvas>
+        <canvas id="canvas" width="1000" height="1000" role="img" aria-label="Your emoji mandala"></canvas>
       </div>
     </div>
 
     <div class="panel">
       <div class="field">
-        <label class="group-label">Your palette</label>
+        <h2 class="group-label">Your palette</h2>
         <div class="palette-chips" id="paletteChips"></div>
         <p class="hint palette-cue" id="paletteCue" aria-live="polite"></p>
         <div class="custom-row">
@@ -53,7 +54,7 @@
 
       <div class="field saved-palettes">
         <div class="saved-head">
-          <span class="group-label" id="savedLabel">Saved palettes</span>
+          <h2 class="group-label" id="savedLabel">Saved palettes</h2>
           <button class="btn small" id="savePalette" type="button">Save palette</button>
         </div>
         <p class="saved-note" id="savedNote" role="status" hidden></p>
@@ -61,9 +62,9 @@
         <p class="hint" id="savedEmpty">No saved palettes yet. Save this one to come back to it later on this device.</p>
       </div>
 
-      <dialog id="emojiDialog">
+      <dialog id="emojiDialog" aria-labelledby="emojiDialogTitle">
         <div class="emoji-dialog-head">
-          <strong>Browse emoji</strong>
+          <strong id="emojiDialogTitle">Browse emoji</strong>
           <button class="btn ghost small" id="closeEmojiDialog" type="button">Close</button>
         </div>
         <div class="emoji-added" id="emojiAdded" role="status" aria-live="polite"></div>
@@ -71,34 +72,34 @@
       </dialog>
 
       <div class="field">
-        <label class="group-label">Quick add</label>
+        <h2 class="group-label">Quick add</h2>
         <div class="emoji-grid" id="emojiGrid"></div>
       </div>
 
       <div class="field zoom-field">
-        <label>View zoom <span class="val" id="zoomVal">100%</span></label>
+        <label for="zoom">View zoom <span class="val" id="zoomVal" aria-hidden="true">100%</span></label>
         <input type="range" id="zoom" min="70" max="160" value="100">
       </div>
 
       <div class="field">
-        <label class="group-label" id="shapeLabel">Shape</label>
+        <h2 class="group-label" id="shapeLabel">Shape</h2>
         <div class="shape-strip" id="shapeStrip" role="group" aria-labelledby="shapeLabel"></div>
       </div>
 
       <div class="shape-controls" id="shapeControls"></div>
 
       <div class="field">
-        <label>Rotation offset <span class="val" id="rotVal">0°</span></label>
+        <label for="rotation">Rotation offset <span class="val" id="rotVal" aria-hidden="true">0°</span></label>
         <input type="range" id="rotation" min="0" max="360" value="0">
       </div>
 
       <div class="field">
-        <label>Emoji size <span class="val" id="sizeVal">44px</span></label>
+        <label for="emojiSize">Emoji size <span class="val" id="sizeVal" aria-hidden="true">44px</span></label>
         <input type="range" id="emojiSize" min="20" max="80" value="44">
       </div>
 
       <div class="field">
-        <label class="group-label">Center</label>
+        <label class="group-label" for="centerMode">Center</label>
         <select id="centerMode">
           <option value="emoji">Center emoji</option>
           <option value="empty">Empty center</option>
@@ -122,7 +123,7 @@
       </div>
 
       <div class="field">
-        <label class="group-label">Background</label>
+        <h2 class="group-label">Background</h2>
         <div class="bg-presets" id="bgPresets"></div>
         <p class="bg-note" id="bgNote" role="status" hidden></p>
         <div class="toggle-row">
@@ -151,22 +152,23 @@
               <input type="color" id="bgColor2" value="#1a1526">
             </div>
             <div class="custom-bg-row" id="bgAngleRow" hidden>
-              <label for="bgAngle">Angle <span class="val" id="bgAngleVal">0°</span></label>
+              <label for="bgAngle">Angle <span class="val" id="bgAngleVal" aria-hidden="true">0°</span></label>
               <input type="range" id="bgAngle" min="0" max="360" value="0">
             </div>
             <div class="custom-bg-row">
               <label for="bgImage">Image</label>
               <input type="file" id="bgImage" accept="image/*">
             </div>
-            <button class="btn" id="bgAddCustom">Add to backgrounds</button>
+            <button class="btn" id="bgAddCustom" type="button">Add to backgrounds</button>
           </div>
         </details>
       </div>
 
       <div class="footer-actions">
+        <p class="sr-only" id="actionStatus" role="status"></p>
         <div class="row">
-          <button class="btn" id="shuffle">🎲 Shuffle</button>
-          <button class="btn primary" id="save">⬇ Save / share image</button>
+          <button class="btn" id="shuffle" type="button">🎲 Shuffle</button>
+          <button class="btn primary" id="save" type="button">⬇ Save / share image</button>
         </div>
         <button class="btn full" id="share" type="button" hidden>📤 Share</button>
         <p class="hint">The mandala redraws as you go. "Save image" renders a PNG you can send or print.</p>
@@ -174,7 +176,7 @@
         <div class="export" id="exportPanel" hidden>
           <div class="export-head">
             <strong>Your mandala, ready to save</strong>
-            <button class="btn ghost small" id="closeExport">Close</button>
+            <button class="btn ghost small" id="closeExport" type="button">Close</button>
           </div>
           <img id="exportImg" alt="Rendered emoji mandala">
           <p class="hint"><b>Phone:</b> press and hold the image, then "Save to Photos" or "Share".<br><b>Desktop:</b> right-click the image and "Save image as…".</p>

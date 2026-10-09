@@ -24,6 +24,7 @@ import { recordUse, topEmoji } from "./usage.js";
 import { activeBackgroundIndex } from "./backgrounds.js";
 import { addedNote } from "./addnote.js";
 import { setupSavedPalettes } from "./savedPalettesUI.js";
+import { describeMandala } from "./describe.js";
 
 // Preset backgrounds
 const PRESET_BACKGROUNDS = [
@@ -42,11 +43,31 @@ const PRESET_BACKGROUNDS = [
 
 initCanvas();
 
+// Keep the canvas's text description current; say it aloud (politely, after
+// the person stops adjusting) only when it changed. The first one is silent.
+const canvasEl = document.getElementById("canvas");
+const mandalaStatus = document.getElementById("mandalaStatus");
+let lastDescription = "", statusTimer = null;
+function describeForScreenReaders(){
+  const text = describeMandala(state, getShape(state.shape), currentParams());
+  canvasEl.setAttribute("aria-label", "Your emoji mandala. " + text);
+  document.getElementById("rotation").setAttribute("aria-valuetext", state.rotation + "°");
+  document.getElementById("emojiSize").setAttribute("aria-valuetext", state.emojiSize + "px");
+  if (text === lastDescription) return;
+  const first = lastDescription === "";
+  lastDescription = text;
+  if (first) return;
+  clearTimeout(statusTimer);
+  mandalaStatus.textContent = "";
+  statusTimer = setTimeout(() => { mandalaStatus.textContent = text; }, 800);
+}
+
 // Redraw the canvas, show which palette emoji it used, refresh the previews.
 function draw(){
   const { used } = drawCanvas();
   updatePaletteCue(used, getShape(state.shape).label);
   drawShapeThumbs();
+  describeForScreenReaders();
 }
 
 // Initialize palette from usage data if available
@@ -117,6 +138,7 @@ const canvasWrap = document.querySelector(".canvas-wrap");
 document.getElementById("zoom").addEventListener("input", e => {
   state.zoom = Number(e.target.value);
   document.getElementById("zoomVal").textContent = state.zoom + "%";
+  e.target.setAttribute("aria-valuetext", state.zoom + "%");
   canvasWrap.style.transform = "scale(" + (state.zoom/100) + ")";
 });
 
@@ -384,6 +406,7 @@ function setupBackgroundControls() {
 
   bgAngleInput.addEventListener("input", () => {
     bgAngleVal.textContent = bgAngleInput.value + "°";
+    bgAngleInput.setAttribute("aria-valuetext", bgAngleVal.textContent);
   });
 
   bgAddCustomBtn.addEventListener("click", () => {
