@@ -94,32 +94,41 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
         harmless today, because only layer 1 is ever dropped.
       - Still open from slice 3: the unused `target` param in `bindRange`,
         and spiral `layout` reads `this.overlap`.
-- [ ] Slice 5 — yantra. **Designed and planned 2026-10-08** (spec §1/§5
-      updated; plan `docs/superpowers/plans/2026-10-08-shapes-slice-5-yantra.md`;
-      implementation is next). The questions below were all settled in the spec.
-      Original open questions, settle these in a short design chat (with screenshot grids) before
-      prototyping:
-      - Its lotus layer is "tips only". Slice 4 found that tips alone look
-        like scattered dots, so outlined petals were chosen. Should the
-        yantra use outlined petals (`lotus.js` `outline`/`spoke` moved to
-        `lib.js`)?
-      - Radii are undefined: hexagram sizes, the nesting ratio, the lotus
-        band, and how big the bhupura square is relative to `radius`. The
-        square's corners sit at √2 × half-side, so they must stay inside
-        `radius`.
-      - Crowding: "lower `detail`, then drop inner hexagrams" against spec
-        §1 "Crowded groups" (remove elements, keep the structure; units
-        kept or dropped everywhere at once). Does the gate/bhupura ever
-        drop?
-      - The T-gate shape (how many emoji per gate), and the gate opening
-        in the square's sides.
-      - `polygonPoints` signature (added this slice).
-      - Petals are 8–16 in steps of 4, and the Alternate switch is
-        "Interleave petals" (one lotus layer, so this offsets it against
-        the hexagram?).
-      Carry-overs: add a yantra entry to `slice4.mjs`'s `SHAPES` table (or
-      copy it to `slice5.mjs`; don't edit slice4.mjs in place without
-      saying so).
+- [x] **Slice 5 — yantra** (merged 2026-10-09). A bindu, 1–3 nested
+      hexagrams drawn as full triangle lines (inner ones turned 30°), one
+      ring of outlined lotus petals, and a square (bhupura) with four classic
+      T gates. Triangles / Petals (8, 12, 16) sliders and "Offset petals";
+      a fourth strip tile, and Shuffle can pick it. `polygonPoints` and the
+      lotus's petal builders (`petalOutline`/`petalSpoke`) now live in
+      `lib.js`; the lotus is unchanged (22308 of 22308 layouts identical).
+      Crowding drops inner stars first and keeps the square, gates, outer
+      star and lotus tips. Checked by `~/.tools/playwright/slice5.mjs` (151
+      checks, real input, screenshots judged by eye). Four thumbnails redraw
+      in about 2.7 ms, so they keep redrawing on every draw. All design
+      questions settled (spec §1 "Yantra").
+      Known and accepted: at emoji size 80 the outer star has only vertices
+      and knots, and lotus petals shrink to tips when crowded (16 petals +
+      Triangles 3 from size 65; 12 petals from 72). With Triangles 3 at the
+      default size 44 the innermost star keeps only its six vertices (a ring
+      of dots round the bindu). Triangles 3 draws two stars from size 51
+      (58 with an empty center). With fewer than 6 emoji in the palette,
+      wrapped slots can share a colour (spec §3 promises distinct colours
+      only with at least `maxEmoji` emoji).
+      Deferred minors (final review: none block):
+      - `star()` re-tags the down triangle via `kept.slice(-3)` /
+        `slice(-down.length)`, which relies on `add` pushing a unit in order;
+        a role per point would be sturdier.
+      - The yantra skips the outline (not compares it) when petals are too
+        narrow; the result is the same, since only the tip could be kept.
+      - Beyond the slider range (emoji size 100+, or canvas under 800 px)
+        the gates can vanish and `radii[k]` can go non-positive. Unreachable
+        today.
+      - Shuffle turns "Offset petals" on 60 % of the time though its default
+        is off (shared `randomParams` rule).
+      - `polygonPoints` has no test for `perSide = 1` beyond the radius.
+      - Still open from slices 3–4: lotus sweep's 0.95 slack; Interleave
+        picks layers by number; unused `target` param in `bindRange`; spiral
+        `layout` reads `this.overlap`.
 - [ ] Slice 6 — kolam / rangoli lattice.
 
 Models: Opus writes plans and the whole-branch review; Sonnet/Haiku

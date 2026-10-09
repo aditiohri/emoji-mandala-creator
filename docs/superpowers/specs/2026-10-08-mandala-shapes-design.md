@@ -294,7 +294,7 @@ is saved per device next to the background (`localStorage` key
   canvas tiles (buttons, `aria-pressed`, `aria-label` = shape label),
   re-rendered when palette or background changes (≤ 6 tiles; cheap with the
   luminance cache; slice 3 simply redraws them on every draw. Measured in
-  slice 4 with three tiles: about 1 ms per redraw, so this stays). Wraps on phones; no horizontal page scroll.
+  slice 4 with three tiles: about 1 ms per redraw; slice 5 with four: about 2.7 ms in all, so this stays). Wraps on phones; no horizontal page scroll.
 - **Per-shape controls** — the Rings / Symmetry / Spacing sliders in
   `index.html` are replaced (slice 3) by a container that `shapeControls.js`
   fills from `shape.controls`, reusing today's slider markup and classes.
@@ -467,7 +467,7 @@ emojiSize·(a+b)/2·(1-overlap)`.
    capped as the Lotus shape's (§5 Lotus 4). The petal is built both as
    `lib.petalOutline` and as `lib.petalSpoke`; whichever keeps more emoji is
    used. Heading: the petal's axis.
-5. **Inner stars** `k = 1..triangles-1`: turned `k·30°`, scale `floor`,
+5. **Inner stars** `k = 1..triangles-1`: each turned 30° from the star outside it (so alternate stars share the outer star's orientation), scale `floor`,
    `R_k = R_{k-1}/√3 - need(floor, s_{k-1})`, so their tips point at, and
    clear, the outer star's knots.
 6. **Crowding** (§1 "Crowded groups"). Everything is placed in the order
@@ -481,7 +481,7 @@ emojiSize·(a+b)/2·(1-overlap)`.
    every petal at once). The square and gates sit on a lattice of step
    `d ≥ emojiSize·ls` and always fit; the lotus's tips and the outer star
    always fit too (checked by the sweep). Inner stars drop first: at emoji
-   size 56 and above, Triangles 3 draws two stars.
+   size 51 and above (58 with an empty center), Triangles 3 draws two stars.
 
 Groups inside out, with fixed role slots: bindu (`solid`, slot 0); per star
 from the innermost, up triangle (`solid`, slot 1), down triangle (`solid`,
