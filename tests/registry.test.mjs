@@ -3,16 +3,19 @@ import assert from "node:assert/strict";
 import { SHAPES, getShape, defaultParams, randomParams } from "../js/shapes/index.js";
 import rings from "../js/shapes/rings.js";
 import spiral from "../js/shapes/spiral.js";
+import lotus from "../js/shapes/lotus.js";
 
 test("registry order and lookup", () => {
-  assert.deepEqual(SHAPES.map(s => s.id), ["rings", "spiral"]);
+  assert.deepEqual(SHAPES.map(s => s.id), ["rings", "spiral", "lotus"]);
   assert.equal(getShape("spiral"), spiral);
+  assert.equal(getShape("lotus"), lotus);
   assert.equal(getShape("nope"), rings);
 });
 
 test("defaultParams: control defaults, plus alternate only if the shape has it", () => {
   assert.deepEqual(defaultParams(rings), { rings: 6, symmetry: 10, spacing: 100, alternate: true });
   assert.deepEqual(defaultParams(spiral), { seeds: 144, divergence: 137.5, bands: 3 });
+  assert.deepEqual(defaultParams(lotus), { layers: 2, petals: 8, width: 80, alternate: true });
 });
 
 // Deterministic stand-in for Math.random.
