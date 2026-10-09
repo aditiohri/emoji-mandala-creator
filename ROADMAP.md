@@ -283,8 +283,13 @@ is sticky and unreliable on touch; screen-reader use should be easy.
   strip about 33vh, collapsible sections with Show/Hide all, 44 px touch
   targets, slider-swipe fix, landscape two-column).
   **C, palette** (Quick add as buttons, a non-drag way to reorder, cross-row
-  drag, fewer tab stops) still needs a design chat. Slices C and D share
-  `styles.css` and `index.html`, so build them one after the other.
+  drag, fewer tab stops) is NEXT and still needs a design chat
+  (design first, then spec on disk, then /clear, then build). D is merged, so
+  the palette section now lives in a collapsible `#section-palette-body`;
+  chips and their × stay under 44/24 px until C. Also open for C: F13
+  focus-after-remove. Device checklist (`docs/a11y-device-checklist.md`) is
+  still pending the user; it may add palette findings, so ask whether results
+  are in before designing.
 - [ ] **Fix slices**, original note, cut from the findings. Likely shapes: native or proper
   ARIA sliders with bigger hit targets; a non-drag way to reorder chips
   (move up/down buttons or a keyboard mode); labels, focus order and live
