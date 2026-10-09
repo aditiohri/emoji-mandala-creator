@@ -94,7 +94,30 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
         harmless today, because only layer 1 is ever dropped.
       - Still open from slice 3: the unused `target` param in `bindRange`,
         and spiral `layout` reads `this.overlap`.
-- [ ] Slice 5 — yantra.
+- [ ] Slice 5 — yantra. Spec §5 "Yantra" predates the lotus decisions.
+      Settle these in a short design chat (with screenshot grids) before
+      prototyping:
+      - Its lotus layer is "tips only". Slice 4 found that tips alone look
+        like scattered dots, so outlined petals were chosen. Should the
+        yantra use outlined petals (`lotus.js` `outline`/`spoke` moved to
+        `lib.js`)?
+      - Radii are undefined: hexagram sizes, the nesting ratio, the lotus
+        band, and how big the bhupura square is relative to `radius`. The
+        square's corners sit at √2 × half-side, so they must stay inside
+        `radius`.
+      - Crowding: "lower `detail`, then drop inner hexagrams" against spec
+        §1 "Crowded groups" (remove elements, keep the structure; units
+        kept or dropped everywhere at once). Does the gate/bhupura ever
+        drop?
+      - The T-gate shape (how many emoji per gate), and the gate opening
+        in the square's sides.
+      - `polygonPoints` signature (added this slice).
+      - Petals are 8–16 in steps of 4, and the Alternate switch is
+        "Interleave petals" (one lotus layer, so this offsets it against
+        the hexagram?).
+      Carry-overs: add a yantra entry to `slice4.mjs`'s `SHAPES` table (or
+      copy it to `slice5.mjs`; don't edit slice4.mjs in place without
+      saying so).
 - [ ] Slice 6 — kolam / rangoli lattice.
 
 Models: Opus writes plans and the whole-branch review; Sonnet/Haiku
