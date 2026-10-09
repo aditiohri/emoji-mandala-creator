@@ -377,6 +377,15 @@ select{
   border-bottom:1px solid var(--line);
   font-size:0.85rem;
 }
+.emoji-added{
+  min-height:1.9em; /* reserved so the picker doesn't jump when a note appears */
+  padding:6px 14px;
+  font-size:0.8rem;
+  color:var(--text);
+  background:color-mix(in srgb, var(--coral) 12%, var(--paper));
+  border-bottom:1px solid var(--line);
+}
+.emoji-added:empty{ background:transparent; }
 emoji-picker{
   width:100%;
   height:420px;

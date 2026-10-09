@@ -172,7 +172,6 @@ export function setupCustomEmojiInput(onInput){
       customInput.value = "";
       if (!val) return;
       splitEmojiClusters(val).forEach(c => {
-        if (state.palette.includes(c)) return;
         state.palette.push(c);
         recordUse(c);
       });

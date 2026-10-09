@@ -15,6 +15,7 @@ import {
 } from "./export.js";
 import { recordUse, topEmoji } from "./usage.js";
 import { activeBackgroundIndex } from "./backgrounds.js";
+import { addedNote } from "./addnote.js";
 
 // Preset backgrounds
 const PRESET_BACKGROUNDS = [
@@ -71,13 +72,23 @@ emojiDialog.addEventListener("click", (e) => {
 });
 emojiPicker.addEventListener("emoji-click", (e) => {
   const emoji = e.detail && e.detail.unicode;
-  if (!emoji || state.palette.includes(emoji)) return;
+  if (!emoji) return;
   state.palette.push(emoji);
   recordUse(emoji);
   renderPaletteChips(draw);
   syncGridActiveStates();
   draw();
+  showAddedNote(addedNote(emoji, state.palette));
 });
+
+// The palette is dimmed (or hidden, on phones) behind the dialog, so confirm each pick inside it.
+const emojiAdded = document.getElementById("emojiAdded");
+let addedTimer = null;
+function showAddedNote(text) {
+  emojiAdded.textContent = text;
+  clearTimeout(addedTimer);
+  addedTimer = setTimeout(() => { emojiAdded.textContent = ""; }, 2500);
+}
 
 // Setup sliders. `target` returns the object the value lives in.
 function bindRange(id, labelId, key, fmt, target = () => state){
