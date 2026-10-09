@@ -129,7 +129,13 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
       - Still open from slices 3–4: lotus sweep's 0.95 slack; Interleave
         picks layers by number; unused `target` param in `bindRange`; spiral
         `layout` reads `this.overlap`.
-- [ ] Slice 6 — kolam / rangoli lattice.
+- [ ] Slice 6 — kolam / rangoli lattice. Not designed yet. Spec §5
+      "Kolam" (line ~495) predates the decisions made in slices 4–5
+      (crowded groups keep structure, units kept/dropped whole, full-line
+      geometry, per-shape Alternate). Start with a design chat, one question
+      at a time with screenshot grids; then prototype, then plan (slice 5's
+      plan is the model). Extend `slice5.mjs`'s SHAPES table (copy to
+      `slice6.mjs`). Last shape: the build order ends here.
 
 Models: Opus writes plans and the whole-branch review; Sonnet/Haiku
 implement and review tasks (user asked 2026-10-08 to use Sonnet and Haiku
