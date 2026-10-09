@@ -278,10 +278,10 @@ is sticky and unreliable on touch; screen-reader use should be easy.
 - **Fix slices (decided 2026-10-09; findings and statuses in
   `docs/a11y-audit-findings.md`).** A (names, headings, announcements) and B
   (contrast, focus ring, forced colors, reduced motion) are DONE, commits
-  `84e0545` and `6eefc85`. **D, phone layout and touch** has its design
-  settled in `docs/superpowers/specs/2026-10-09-phone-layout-design.md`
-  (sticky mandala strip about 33vh, collapsible sections with Show/Hide all,
-  44 px touch targets, slider-swipe fix, landscape two-column); next to build.
+  `84e0545` and `6eefc85`. **D, phone layout and touch** is DONE (spec
+  `docs/superpowers/specs/2026-10-09-phone-layout-design.md`: sticky mandala
+  strip about 33vh, collapsible sections with Show/Hide all, 44 px touch
+  targets, slider-swipe fix, landscape two-column).
   **C, palette** (Quick add as buttons, a non-drag way to reorder, cross-row
   drag, fewer tab stops) still needs a design chat. Slices C and D share
   `styles.css` and `index.html`, so build them one after the other.

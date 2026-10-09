@@ -25,6 +25,7 @@ import { activeBackgroundIndex } from "./backgrounds.js";
 import { addedNote } from "./addnote.js";
 import { setupSavedPalettes } from "./savedPalettesUI.js";
 import { describeMandala } from "./describe.js";
+import { SECTION_IDS, defaultSections, parseSections, toggleSection, setAll, allOpen } from "./sections.js";
 
 // Preset backgrounds
 const PRESET_BACKGROUNDS = [
@@ -132,6 +133,31 @@ function bindRange(id, labelId, key, fmt, target = () => state){
   });
   if (label) label.textContent = fmt(target()[key]);
 }
+
+// A vertical swipe that starts on a slider should scroll the page, not move the
+// slider. Touch browsers jump the thumb to the finger on touch-start, so once the
+// gesture turns out to be vertical, put the value back.
+(function guardSliderSwipe(){
+  let el = null, startValue = "", x0 = 0, y0 = 0, decided = false;
+  document.addEventListener("touchstart", e => {
+    const t = e.target;
+    el = t instanceof HTMLInputElement && t.type === "range" ? t : null;
+    if (!el) return;
+    startValue = el.value; decided = false;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener("touchmove", e => {
+    if (!el || decided) return;
+    const dx = Math.abs(e.touches[0].clientX - x0), dy = Math.abs(e.touches[0].clientY - y0);
+    if (dx < 8 && dy < 8) return;
+    decided = true;
+    if (dy > dx && el.value !== startValue){
+      el.value = startValue;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }, { passive: true });
+  document.addEventListener("touchend", () => { el = null; }, { passive: true });
+})();
 
 // Zoom slider (special handling)
 const canvasWrap = document.querySelector(".canvas-wrap");
@@ -490,6 +516,38 @@ function setupBackgroundControls() {
 }
 
 setupBackgroundControls();
+
+// Collapsible control sections. Open/closed is remembered per device; a first
+// visit starts with just Shape open on a phone and everything open on desktop.
+function setupSections(){
+  const isPhone = matchMedia("(max-width: 860px)").matches;
+  let raw = null;
+  try { raw = localStorage.getItem("mandala.sections"); } catch(e) {}
+  let open = parseSections(raw, defaultSections(isPhone));
+  const all = document.getElementById("toggleAll");
+  function apply(){
+    for (const id of SECTION_IDS){
+      document.getElementById(`section-${id}-btn`).setAttribute("aria-expanded", String(open[id]));
+      document.getElementById(`section-${id}-body`).hidden = !open[id];
+    }
+    all.textContent = allOpen(open) ? "Hide all controls" : "Show all controls";
+  }
+  function change(next){
+    open = next;
+    apply();
+    try { localStorage.setItem("mandala.sections", JSON.stringify(open)); } catch(e) {}
+  }
+  for (const id of SECTION_IDS){
+    document.getElementById(`section-${id}-btn`).addEventListener("click", () => {
+      change(toggleSection(open, id));
+    });
+  }
+  all.addEventListener("click", () => {
+    change(setAll(!allOpen(open)));
+  });
+  apply();
+}
+setupSections();
 
 // Initial draw
 draw();

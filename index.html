@@ -38,11 +38,15 @@
       <div class="canvas-wrap">
         <canvas id="canvas" width="1000" height="1000" role="img" aria-label="Your emoji mandala"></canvas>
       </div>
+      <button type="button" class="btn small toggle-all" id="toggleAll">Hide all controls</button>
     </div>
 
     <div class="panel">
+      <section class="section" id="section-palette">
+        <h2 class="section-head"><button type="button" class="section-toggle" id="section-palette-btn" aria-expanded="true" aria-controls="section-palette-body"><span>Palette</span><span class="chev" aria-hidden="true"></span></button></h2>
+        <div class="section-body" id="section-palette-body">
       <div class="field">
-        <h2 class="group-label">Your palette</h2>
+        <h3 class="group-label">Your palette</h3>
         <div class="palette-chips" id="paletteChips"></div>
         <p class="hint palette-cue" id="paletteCue" aria-live="polite"></p>
         <div class="custom-row">
@@ -54,7 +58,7 @@
 
       <div class="field saved-palettes">
         <div class="saved-head">
-          <h2 class="group-label" id="savedLabel">Saved palettes</h2>
+          <h3 class="group-label" id="savedLabel">Saved palettes</h3>
           <button class="btn small" id="savePalette" type="button">Save palette</button>
         </div>
         <p class="saved-note" id="savedNote" role="status" hidden></p>
@@ -72,17 +76,22 @@
       </dialog>
 
       <div class="field">
-        <h2 class="group-label">Quick add</h2>
+        <h3 class="group-label">Quick add</h3>
         <div class="emoji-grid" id="emojiGrid"></div>
       </div>
+        </div>
+      </section>
 
+      <section class="section" id="section-shape">
+        <h2 class="section-head"><button type="button" class="section-toggle" id="section-shape-btn" aria-expanded="true" aria-controls="section-shape-body"><span>Shape</span><span class="chev" aria-hidden="true"></span></button></h2>
+        <div class="section-body" id="section-shape-body">
       <div class="field zoom-field">
         <label for="zoom">View zoom <span class="val" id="zoomVal" aria-hidden="true">100%</span></label>
         <input type="range" id="zoom" min="70" max="160" value="100">
       </div>
 
       <div class="field">
-        <h2 class="group-label" id="shapeLabel">Shape</h2>
+        <h3 class="group-label" id="shapeLabel">Pick a shape</h3>
         <div class="shape-strip" id="shapeStrip" role="group" aria-labelledby="shapeLabel"></div>
       </div>
 
@@ -122,8 +131,13 @@
         </label>
       </div>
 
+        </div>
+      </section>
+
+      <section class="section" id="section-background">
+        <h2 class="section-head"><button type="button" class="section-toggle" id="section-background-btn" aria-expanded="true" aria-controls="section-background-body"><span>Background</span><span class="chev" aria-hidden="true"></span></button></h2>
+        <div class="section-body" id="section-background-body">
       <div class="field">
-        <h2 class="group-label">Background</h2>
         <div class="bg-presets" id="bgPresets"></div>
         <p class="bg-note" id="bgNote" role="status" hidden></p>
         <div class="toggle-row">
@@ -163,6 +177,8 @@
           </div>
         </details>
       </div>
+        </div>
+      </section>
 
       <div class="footer-actions">
         <p class="sr-only" id="actionStatus" role="status"></p>
