@@ -35,3 +35,11 @@ export function fitGap({ gap, emojiPx, overlap, other, floor }){
   const s = other === undefined ? unit : 2 * unit - other;
   return Math.max(floor, Math.min(1, s));
 }
+
+// Lotus petal outline on axis angle 0, from its base (radius B) to its tip
+// (radius T): t in [0, 1] -> { r, phi }, phi the angle off the petal's axis.
+// The base is open (phi = 0.71·phiMax), the petal is widest a third of the
+// way up (phi = phiMax) and pointed at the tip (phi = 0).
+export function petalCurve(B, T, phiMax){
+  return t => ({ r: B + t * (T - B), phi: phiMax * Math.sin(Math.PI * (0.25 + 0.75 * t)) });
+}
