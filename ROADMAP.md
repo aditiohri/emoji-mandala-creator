@@ -129,13 +129,20 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
       - Still open from slices 3–4: lotus sweep's 0.95 slack; Interleave
         picks layers by number; unused `target` param in `bindRange`; spiral
         `layout` reads `this.overlap`.
-- [ ] Slice 6 — kolam / rangoli lattice. Not designed yet. Spec §5
-      "Kolam" (line ~495) predates the decisions made in slices 4–5
-      (crowded groups keep structure, units kept/dropped whole, full-line
-      geometry, per-shape Alternate). Start with a design chat, one question
-      at a time with screenshot grids; then prototype, then plan (slice 5's
-      plan is the model). Extend `slice5.mjs`'s SHAPES table (copy to
-      `slice6.mjs`). Last shape: the build order ends here.
+- [ ] **Slice 6 — kolam / rangoli lattice** (designed and prototyped
+      2026-10-09; plan written, awaiting approval; not built). Each lattice
+      dot is an emoji inside a diamond of line emoji; neighbouring diamonds
+      touch at shared "knots". Dots, knots and lines have separate colours;
+      Grid (3–9, odd) and Spacing sliders and "Checker colours". Crowding
+      drops rings of dots until the diamonds show, then thins the middle of
+      each side first; every point is kept or dropped with all its symmetric
+      copies. Spec §1 "Kolam" and §5; plan
+      `docs/superpowers/plans/2026-10-09-shapes-slice-6-kolam.md`; prototype
+      in `.claude/worktrees/slice6-proto2` (git-ignored), browser script
+      `~/.tools/playwright/slice6.mjs`. Last shape: the build order ends here.
+      Known and accepted: Grid 9 shows the same as Grid 7 at the default
+      emoji size (the lattice loses a ring of dots); at size 80 Grid 5–9 show
+      Grid 3.
 
 Models: Opus writes plans and the whole-branch review; Sonnet/Haiku
 implement and review tasks (user asked 2026-10-08 to use Sonnet and Haiku

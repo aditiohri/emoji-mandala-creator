@@ -1,6 +1,6 @@
 # Customizable mandala shapes — design
 
-Status: approved (2026-10-08), revised after two reviews; toggles decided 2026-10-08 (§1, §4); lotus decided 2026-10-08 (§1 "Lotus", §5); yantra decided 2026-10-08 (§1 "Yantra", §5). Tracker: `ROADMAP.md` item 1.
+Status: approved (2026-10-08), revised after two reviews; toggles decided 2026-10-08 (§1, §4); lotus decided 2026-10-08 (§1 "Lotus", §5); yantra decided 2026-10-08 (§1 "Yantra", §5); kolam decided 2026-10-09 (§1 "Kolam", §5). Tracker: `ROADMAP.md` item 1.
 Each slice in §6 gets its own implementation plan.
 
 ## 1. Intent
@@ -34,13 +34,14 @@ shape and every combination of palette and control values:
 | Switching shapes | Each shape remembers its own control values for the session; shared controls are global. |
 | Backdrop | *(revised 2026-10-08)* Visible guide lines are **dropped**: no "Guide rings", and shapes draw no guides. Shapes still lay emoji out along their underlying geometry (rings, petals, triangles, grid); only the drawn lines go. The Backdrop select goes away; **"Soft glow"** becomes an on/off switch in the Background section. |
 | Face outward | Shared. Every placement carries a `heading`; the renderer applies it: the glyph's top points away from the center. *(Toggles decision, 2026-10-08)* Kept as is: once colouring is symmetric (slice 2), directional emoji (🦋🌊🔥🌙) form a clear starburst at defaults. Round emoji (✨🌸💠) show little change, and that is accepted. |
-| Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. *(Toggles decision, 2026-10-08)* For rings, the visible effect is the half-step offset of every other ring (straight spokes → staggered lattice); the direction reversal never shows for rings: even rings are emitted in reverse angular order and also marked `reverse`, and the two cancel (found in the slice 2 final review; harmless, kept). Shapes that emit forward and use `reverse` (kolam) do show it with p = 3; the lotus's Alternate is a half-petal offset instead (§5). So rings keep the behaviour but the switch is renamed **"Stagger alternate rings"**; the state key stays `alternate`. Options judged by screenshot and rejected: a progressive twist (spiral arms; overlaps the spiral shape) and swapping colours on alternate rings (hard to tell from off). |
+| Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. *(Toggles decision, 2026-10-08)* For rings, the visible effect is the half-step offset of every other ring (straight spokes → staggered lattice); the direction reversal never shows for rings: even rings are emitted in reverse angular order and also marked `reverse`, and the two cancel (found in the slice 2 final review; harmless, kept). Shapes that emit forward and use `reverse` would show it with p = 3 (none does today); the lotus's Alternate is a half-petal offset instead (§5). So rings keep the behaviour but the switch is renamed **"Stagger alternate rings"**; the state key stays `alternate`. Options judged by screenshot and rejected: a progressive twist (spiral arms; overlaps the spiral shape) and swapping colours on alternate rings (hard to tell from off). |
 | Toggle switches | *(2026-10-08)* Every switch must toggle when its **visible pill** is clicked with a mouse or tapped, not only via its text label. Today's `<div class="switch">` around a 0×0 checkbox fails this; switches become `<label class="switch">`. Verified with real Playwright locator clicks on the pill, never JS `checked =`/`click()`. |
 | Soft glow | *(2026-10-08, slice 2 final review)* Glow inner stop raised to 0.22 (light) / 0.30 (dark) alpha so the switch reads at a glance at defaults; 0.10 / 0.16 was barely visible. |
 | Crowded groups | *(2026-10-08, slice 3 design, chosen from screenshots of four options)* **When crowded, remove elements and keep the structure; never jump to an unrelated count.** Rings: a ring that can't hold its full `symmetry` at the floor scale is **dropped**, not re-spaced with fewer emoji, so the crowded core becomes an open halo around the center emoji instead of a scatter of unrelated counts (8, 15, 21 around 24 spokes). Rejected: snapping to a divisor of symmetry (still busy for odd symmetry), halving, keeping slice 2's behaviour. Spiral: lower the seed count, and drop the seeds that would hit the center emoji. Later shapes follow the same rule (fewer petals/detail/grid dots, never an irregular layout). |
 | Phone chip drag | *(2026-10-08, slice 3 design)* Chips use `touch-action: pan-y`: a vertical swipe that starts on a chip scrolls the page (with `none` it was blocked); a drag that starts sideways reorders, and may then move in any direction, including across rows. Press-and-hold was rejected as more code and more iOS-specific risk. |
 | Lotus | *(2026-10-08, slice 4 design, chosen from screenshot grids)* Petals are **outlined**: a tip emoji plus emoji spaced about one emoji apart along both sides of a pointed-arch outline (open base, widest a third of the way up), not the 3 emoji per petal first written here, which read as scattered dots. Layers fill the space from the center emoji to `radius` with **outer bands wider**, leaving no gaps. The slider is **"Petal width"** (how much of the room to the neighbouring petal a petal takes), not "Petal length". **Layers 1–3**: at 4, layers tangle into one mass. Crowding: the petal count never changes; a petal too narrow for two sides becomes a **spoke** (emoji down its axis). Rejected: dropping layers whose petals are thin (it emptied the canvas at emoji size 80), fewer petals. `polygonPoints` waits for yantra (slice 5). |
 | Yantra | *(2026-10-08, slice 5 design, chosen from screenshot grids)* The §5 text first written here did not survive prototyping, and is rewritten. **Lotus layer: outlined petals** (the Lotus shape's outline), not tips only, which read as scattered dots; a petal is an outline or a spoke, **whichever keeps more emoji** (the Lotus shape's widest-point test alone left 16 narrow petals as a tip plus one side pair, a ring of dots at their bases). **Hexagram: two full triangle lines** with the six crossings as "knots"; leaving the inner hexagon's sides empty showed six clumps, not two triangles. Lines crossing at 60° keep their neighbours one step apart, so full lines never overlap. **Lines at 0.65× the emoji size** (the bindu stays 1.05): at full size the lines were sparse dots and nested stars clumped. **Nested stars turn 30°** each level, tips pointing at the outer star's knots, at the floor scale; the star grows as Triangles rises. **Gates: classic T outline** (opening, narrow neck, wider head) on the square's lattice. Rejected: a T of stem and bar, a gateway of posts and lintel, no gates. **Edge detail is removed**: with full lines the density is set by fit, so the slider had nothing to do; no third control replaces it. Alternate is **"Offset petals"** (half a petal, default off). |
+| Kolam | *(2026-10-09, slice 6 design, chosen from screenshot grids; the user picked the dot/diamond structure, the rest was decided from prototypes)* **Each lattice dot is an emoji inside a small diamond of line emoji ("diamonds round dots")**; neighbouring diamonds touch at the edge midpoints between dots, and those touch points are shared **knots**, like the yantra's crossings. Rejected: a plain dot grid, a diamond-shaped dot field (1-3-5-7…), dots joined by a square net. The first prototype was dense where diamonds touch, and one colour: now **three roles with their own emoji** (dots, knots, lines) and crowding thins the lines. **Lines at 0.65× the emoji size** (as the yantra); dots **1.05×**. **Units are whole symmetry classes**: a point with all its copies under the square's eight symmetries (4-fold rotation and mirror), kept or dropped together, so the figure keeps its symmetry; a diamond's side points go in mirror pairs. Order of trying: dots, knots, then side points, **nearest a knot first**, so crowding thins the middle of a side before its ends. **The lattice loses rings of dots** (Grid 9 → 7 → 5 …) until the diamonds show: a side must hold at least one point and the point next to a knot must clear the dot inside the diamond. Rejected: keeping a bare dot grid when lines don't fit (it is the rejected plain grid). **Alternate = "Checker colours"** (default off): odd cells of the chessboard (`i + j` odd) take a second dot emoji and a second line emoji; knots stay one role. Rejected: reversing ring cycles (invisible with solid groups), colouring by ring. **Grid 3–9 odd, default 5** (11 was cut: from 9 up the lattice already collapses at the default emoji size); **Spacing 50–100 % (shown ×), default 100**: the share of the radius the lattice spans, so lower = smaller and more crowded. Shuffle: Grid 3–7, Spacing 70–100: always shows diamonds, never an empty or tiny figure. "Empty" removes the centre dot only. |
 | Build order | Engine → pattern/palette rules → spiral (+ strip, per-shape controls) → lotus → yantra → kolam. |
 
 **Assumptions (not stated by the user):** the chosen shape and its settings
@@ -227,8 +228,8 @@ above), `chord(r, count)`, `fitRing` and `fitGap`; both fit helpers take the
   at the floor. A group's final scale is `min(ringFit, gapFit to inner neighbour,
   gapFit to outer neighbour)`.
 - When a radial gap is too small even at `MIN_SCALE`, each shape resolves it
-  as described in §5 (rings push outward, spiral drops inner seeds, kolam
-  shrinks the grid). Groups pushed past `radius` are dropped.
+  as described in §5 (rings drop rings, spiral drops inner seeds, kolam
+  drops rings of dots). Groups pushed past `radius` are dropped.
 
 The sweep test in §7 checks the invariant over **all pairs** of placements,
 so any shape-specific gap it misses fails a test.
@@ -492,14 +493,43 @@ different slots. "Empty" removes the bindu (the knots keep slot 0). Layout
 cost: about 1.5 ms for a thumbnail, up to about 9 ms at emoji size 20 with
 Triangles 3 and 16 petals.
 
-**Kolam / rangoli lattice** — square grid of `g × g` dots (Grid 3–11 odd,
-default 7), `kmax = (g-1)/2`, cell `s = radius/(kmax·√2) · spacing/100`
-with Spacing 50–100 (default 90), so corners at `√2·kmax·s` always stay
-inside `radius`. Emoji on the dots. Groups: center dot, then one `cycle`
-group per square ring `k = 1..kmax` (8k dots). Alternate ("Alternate dot
-rings"): odd rings `reverse`. Fit: neighbour distance is `s`; at
-`MIN_SCALE`, reduce `g` by 2 until it fits. "Empty" removes the center
-dot's emoji. `maxEmoji` 4.
+**Kolam / rangoli lattice** *(rewritten 2026-10-09 in the slice 6 design, §1 "Kolam")*.
+Label "Kolam". Controls: Grid 3–9 step 2 (default 5, Shuffle 3–7), Spacing
+50–100 (default 100, Shuffle 70–100, shown `v/100` + "×"). Alternate
+**"Checker colours"** (default off). `maxEmoji` 6, `overlap` 0.15. Lines use
+`ls = max(floor, 0.65)`, dots 1.05; `need(a, b) = emojiSize·(a+b)/2·(1-overlap)`.
+
+1. **Lattice.** `g × g` dots, `km = (g-1)/2`, step `s = radius /
+   hypot(km+½, km) · spacing/100`, so the outermost diamonds' corners stay on
+   or inside `radius`. Dot `(i, j)` is at `(i·s, j·s)`.
+2. **Diamond.** Round each dot, a diamond with its corners (the **knots**) half
+   a step away along the axes: `(i±½, j)` and `(i, j±½)`. Each knot is shared by
+   the two diamonds that meet there. A side is `L = s/√2` long and is split into
+   `m = max(1, ⌊L/need(ls, ls)⌋)` equal steps, so side points are at least
+   `need` apart; the points at `t/m` (t = 1..m-1) from a corner are the side
+   points. Where two diamonds touch, the four sides cross at 90°, so neighbours
+   are never closer than along a side.
+3. **Fitting the lattice.** `g` drops by 2 until `m ≥ 2` and the side point
+   nearest a corner, `(s/2)·hypot(1-1/m, 1/m)` from its dot, clears the dot:
+   `≥ need(1.05, ls)`. At emoji size 44 and Spacing 1.0 that keeps Grid 7; at
+   0.9 it keeps Grid 5; at size 80 it keeps Grid 3 (a single diamond at Grid 3
+   with Spacing 0.5). Grid 3 always keeps at least one diamond.
+4. **Crowding** (§1 "Crowded groups"). Placed in order: dots (from the centre
+   outward), knots (same), then side points by `t = 1 .. ⌊m/2⌋`, each with its
+   mirror `m - t` on every side of the diamond. A unit is a point (or such a
+   set) with all its copies under the square's 8 symmetries, kept only if
+   every point clears all kept points and the rest of the unit. Because dots
+   and knots are placed before any side point, the lattice and its touch points
+   never lose elements to lines; the middle of each side goes first.
+5. **Colours.** Groups inside out, all `solid` with fixed slots: dots slot 0
+   (the centre dot is group 0 when present), second dots 3 (Checker only), knots
+   2, lines 1, second lines 4 (Checker only). Consecutive groups always differ.
+   Checker: a dot and its diamond's side points are "odd" when `i + j` is odd;
+   this is invariant under the lattice's symmetries. Heading: dots and knots
+   radial from the centre (the centre dot upright, `heading: null`); side
+   points the side's outward normal. "Empty" removes the centre dot only.
+   Layout cost: about 0.5 ms at the defaults, up to about 12 ms at emoji size
+   20 with Grid 9.
 
 ## 6. Slices
 
@@ -538,7 +568,7 @@ subagents, screenshot-verified by me before merge, and ticked off in
    the only shape that needs it).
 5. **Yantra** (adds `polygonPoints`; moves the lotus's `outline`/`spoke`
    into `lib.js` as `petalOutline`/`petalSpoke`, no change to the lotus).
-6. **Kolam / rangoli lattice.**
+6. **Kolam / rangoli lattice** (adds no `lib.js` function; Grid max 9, see §1 "Kolam").
 
 ## 7. Testing
 
