@@ -188,16 +188,14 @@ sessions, in this order:
     Enter, Space, `aria-pressed`, label); focus is restored after the list
     re-renders. Checked by `~/.tools/playwright/fu2.mjs` (real key presses
     and file chooser, screenshots judged by eye) and 89 unit tests.
-- [ ] **Session B, save palettes (NEXT):** a feature, so it starts with a design chat
-  (names, per-device `localStorage` vs shareable, UI to load/rename/delete,
-  any paid gate, interplay with the usage-based startup palette), then spec
-  and plan.
-
-Still open:
-
-- **New idea: save palettes (maybe a paid feature).** The palette is
-  rebuilt from usage counts on every load, so palette order and duplicates
-  last for the session only. Persisting named palettes could be premium.
+- [x] **Session B, save palettes** (done 2026-10-09, branch
+  `worktree-save-palettes`): per-device `localStorage` (`mandala.savedPalettes`),
+  auto-named from the first 3 emoji, load / rename inline / delete with Undo,
+  cap 20, quota and corrupted-storage handling, no paid gate. Spec
+  `docs/superpowers/specs/2026-10-09-save-palettes-design.md`. Checked by
+  `~/.tools/playwright/sp.mjs` (57 real-input checks) and 104 unit tests.
+  Follow-ups: "Update" a saved palette in place, reorder the saved list,
+  export/import.
 
 ## 3. Monetization experiment: template + build in public (TABLED 2026-10-09; do not start)
 
