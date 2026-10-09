@@ -9,7 +9,7 @@ Live status below. Re-run the scripts (kept outside the repo in `~/.tools/playwr
 - DONE slice C (palette, spec `docs/superpowers/specs/2026-10-09-palette-a11y-design.md`): F4, F5 (closed by the select-then-toolbar path, WCAG 2.5.7; cross-row touch drag is a later slice), F6, F12, F13 focus-after-remove, F8 chip ×. Quick add and the chip row are 1 Tab stop each; the toolbar adds 3. Re-check on iPhone VoiceOver and Samsung TalkBack.
 - Later: F20.
 Scripts in this dir: a1-axe, a2-tree-kbd, a3-kbd, a4-touch, a5-layout, c1-vsr (virtual SR), d-misc, e-fc. Run: `node X.mjs <app-dir> <out-dir>`.
-Layer 2 (real VoiceOver) skipped: Terminal lacked Accessibility permission. Layer 3 (devices) pending user: docs/a11y-device-checklist.md.
+Layer 2 (real VoiceOver) still blocked (2026-10-09, slice C re-check). Accessibility is granted, `SCREnableAppleScript` set, and `npx @guidepup/setup install` has fetched the prefs DMG, but Guidepup's mount fails with `EPERM: operation not permitted, symlink ... -> ~/Library/Group Containers/group.com.apple.VoiceOver/Library/Preferences/...` (also with the Bash sandbox off, so it's a macOS privacy block). To unblock: give Terminal Full Disk Access, or run `npx @guidepup/setup setup` (changes OS settings, may ask for a password). Then rerun the palette walk: Quick add, chip row, select, toolbar, Earlier/Later/Remove, refused last-emoji removal; record names, pressed state, `#paletteStatus` and focus. Nothing about the palette itself has been found wrong yet. Layer 3 (devices) pending user: docs/a11y-device-checklist.md.
 
 ## Findings (file ← where the fix lands)
 SERIOUS/CRITICAL
