@@ -18,7 +18,7 @@ desktop save flow, a separate Share button, and (October 2026):
 
 Still open, roughly in the order we'd tackle them:
 
-## 1. Customizable mandala shapes (in progress)
+## 1. Customizable mandala shapes (done, 2026-10-09)
 
 Spec (approved 2026-10-08, reviewed twice):
 `docs/superpowers/specs/2026-10-08-mandala-shapes-design.md`. Goal: "a
@@ -172,6 +172,18 @@ Done on branch `small-followups` (merged 2026-10-08):
   startup palette is a convenience, and "most used" means "most often
   added". Alternative for later: count emoji in saved or shared images.
 
+Next up (decided 2026-10-09; build in public is tabled). Two separate
+sessions, in this order:
+
+- **Session A, small fixes (one branch, no design chat):** cream preset
+  visibility, localStorage-quota warning on image upload, keyboard-selectable
+  background swatches. Use a new branch name (`small-followups` already
+  exists from the 2026-10-08 merge; its worktree is stale).
+- **Session B, save palettes:** a feature, so it starts with a design chat
+  (names, per-device `localStorage` vs shareable, UI to load/rename/delete,
+  any paid gate, interplay with the usage-based startup palette), then spec
+  and plan.
+
 Still open:
 
 - **New idea: save palettes (maybe a paid feature).** The palette is
@@ -182,7 +194,7 @@ Still open:
   the image won't survive a reload.
 - The light-cream preset is nearly invisible on the cream panel.
 
-## 3. Monetization experiment: template + build in public
+## 3. Monetization experiment: template + build in public (TABLED 2026-10-09; do not start)
 
 Reframed: the app itself is probably not the product. The sellable
 asset is the *system* for going from idea to a live, installable,
