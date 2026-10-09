@@ -55,7 +55,7 @@ export function renderEmojiGrid(onChipChange){
     chip.className = "emoji-chip" + (state.palette.includes(e) ? " active" : "");
     chip.textContent = e;
     chip.addEventListener("click", () => {
-      const i = state.palette.indexOf(e);
+      const i = state.palette.lastIndexOf(e); // drop the newest copy, keeping the early slots stable
       if (i >= 0){
         if (state.palette.length > 1) state.palette.splice(i,1);
       } else {
