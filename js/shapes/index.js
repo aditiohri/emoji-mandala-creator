@@ -1,9 +1,10 @@
 import rings from "./rings.js";
 import spiral from "./spiral.js";
 import lotus from "./lotus.js";
+import yantra from "./yantra.js";
 
 // Ordered list of shapes, as shown in the UI.
-export const SHAPES = [rings, spiral, lotus];
+export const SHAPES = [rings, spiral, lotus, yantra];
 
 export function getShape(id){
   return SHAPES.find(s => s.id === id) ?? SHAPES[0];
