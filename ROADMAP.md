@@ -244,3 +244,44 @@ as an independent willingness-to-pay signal.
 
 **Deferred** unless the app itself shows traction: personal gallery,
 accounts/sync, native mobile wrapper.
+
+## 4. Accessibility, touch and screen reader (decided 2026-10-09; do this next)
+
+One track, run serially at first: the sliders, drag-reorder and screen-reader
+fixes touch the same UI files, so parallel orchestrators would conflict. Known
+pain: some sliders are hard to use on mobile; drag-reorder of palette chips
+is sticky and unreliable on touch; screen-reader use should be easy.
+
+- [ ] **Audit session** (first). Four layers, merged into one ranked findings
+  list written here (severity, file, suggested fix, which fixes touch the
+  same files):
+  1. Headless Playwright (`~/.tools/playwright`): axe-core, accessibility-tree
+     dump (role/name/value of every control), keyboard-only run, touch
+     emulation with target-size measurements and scripted slider/drag gestures.
+  2. Guidepup driving desktop VoiceOver on the Mac (not headless; needs
+     accessibility permissions; check it works on this macOS first).
+  3. Device checklist (Claude writes it; the user runs it): **iPhone**
+     (Safari + VoiceOver) and **Samsung tablet** (Chrome + TalkBack). Shared
+     task script: build a mandala, adjust each slider, reorder emoji, save a
+     palette, export. Per step note what was announced, where it stuck,
+     whether it finished.
+  4. Merge the three into the findings list.
+- [ ] **Fix slices**, cut from the findings. Likely shapes: native or proper
+  ARIA sliders with bigger hit targets; a non-drag way to reorder chips
+  (move up/down buttons or a keyboard mode); labels, focus order and live
+  announcements for changes to the mandala. Deferred a11y minors from
+  section 2 (status note `hidden` + text in one tick; `list-style: none`
+  drops the list role in Safari) belong here.
+- Parallelism: only after the audit shows which files each slice touches, and
+  only for slices that do not overlap.
+
+## 5. Platform: device UX (exploration only, after item 4)
+
+Not a feature; run as a separate exploratory session, outside the plan
+pipeline. Starting view (to test, not settled): the PWA already installs and
+runs full screen, so first polish manifest, icons and share/save-to-photos.
+A Chrome extension fits poorly (suits tools that act on pages). A native app
+is cheapest as a Capacitor wrap of the existing web code (store presence,
+native share/photos). Rust has no clear role (no heavy compute, and the
+project is deliberately build-free); revisit only on a real performance wall.
+Item 4's fixes carry over to any wrapper, so nothing is wasted by going first.
