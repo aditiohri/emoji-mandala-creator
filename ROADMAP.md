@@ -175,8 +175,9 @@ Done on branch `small-followups` (merged 2026-10-08):
 Next up (decided 2026-10-09; build in public is tabled). Two separate
 sessions, in this order:
 
-- [x] **Session A, small fixes** (done 2026-10-09, branch
-  `small-followups-2`; the old `small-followups` worktree is stale):
+- [x] **Session A, small fixes** (done and pushed 2026-10-09; branch
+  `worktree-small-followups-2`, merged fast-forward; its worktree and the
+  older `small-followups` one are both stale, safe to remove):
   - Light-cream preset: inactive swatches get a `--line` border, so pale
     colours show on the panel.
   - Quota: `saveCustomBackgrounds` reports failure; a too-big image upload is
@@ -187,7 +188,7 @@ sessions, in this order:
     Enter, Space, `aria-pressed`, label); focus is restored after the list
     re-renders. Checked by `~/.tools/playwright/fu2.mjs` (real key presses
     and file chooser, screenshots judged by eye) and 89 unit tests.
-- **Session B, save palettes:** a feature, so it starts with a design chat
+- [ ] **Session B, save palettes (NEXT):** a feature, so it starts with a design chat
   (names, per-device `localStorage` vs shareable, UI to load/rename/delete,
   any paid gate, interplay with the usage-based startup palette), then spec
   and plan.
