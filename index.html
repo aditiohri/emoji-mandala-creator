@@ -71,14 +71,11 @@
       </div>
 
       <div class="field">
-        <label>Rings <span class="val" id="ringsVal">6</span></label>
-        <input type="range" id="rings" min="1" max="12" value="6">
+        <label class="group-label" id="shapeLabel">Shape</label>
+        <div class="shape-strip" id="shapeStrip" role="group" aria-labelledby="shapeLabel"></div>
       </div>
 
-      <div class="field">
-        <label>Symmetry (spokes) <span class="val" id="symVal">10</span></label>
-        <input type="range" id="symmetry" min="3" max="24" value="10">
-      </div>
+      <div class="shape-controls" id="shapeControls"></div>
 
       <div class="field">
         <label>Rotation offset <span class="val" id="rotVal">0°</span></label>
@@ -91,11 +88,6 @@
       </div>
 
       <div class="field">
-        <label>Ring spacing <span class="val" id="spaceVal">1.0×</span></label>
-        <input type="range" id="spacing" min="50" max="150" value="100">
-      </div>
-
-      <div class="field">
         <label class="group-label">Center</label>
         <select id="centerMode">
           <option value="emoji">Center emoji</option>
@@ -103,8 +95,8 @@
         </select>
       </div>
 
-      <div class="toggle-row">
-        <label for="alternate">Stagger alternate rings</label>
+      <div class="toggle-row" id="alternateRow">
+        <label for="alternate" id="alternateLabel">Stagger alternate rings</label>
         <label class="switch">
           <input type="checkbox" id="alternate" checked>
           <span class="slider-pill"></span>

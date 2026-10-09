@@ -1,6 +1,13 @@
 import { state, PICKER_EMOJI, DEFAULT_PALETTE } from "./state.js";
 import { initCanvas, draw as drawCanvas } from "./draw.js";
-import { getShape } from "./shapes/index.js";
+import { SHAPES, getShape, randomParams } from "./shapes/index.js";
+import {
+  currentParams,
+  renderShapeControls,
+  renderShapeStrip,
+  syncShapeStrip,
+  drawShapeThumbs
+} from "./shapeControls.js";
 import {
   renderPaletteChips,
   renderEmojiGrid,
@@ -34,10 +41,11 @@ const PRESET_BACKGROUNDS = [
 
 initCanvas();
 
-// Redraw the canvas, then show which palette emoji it used.
+// Redraw the canvas, show which palette emoji it used, refresh the previews.
 function draw(){
   const { used } = drawCanvas();
   updatePaletteCue(used, getShape(state.shape).label);
+  drawShapeThumbs();
 }
 
 // Initialize palette from usage data if available
@@ -101,7 +109,6 @@ function bindRange(id, labelId, key, fmt, target = () => state){
   });
   if (label) label.textContent = fmt(target()[key]);
 }
-const ringsParams = () => state.shapeParams.rings;
 
 // Zoom slider (special handling)
 const canvasWrap = document.querySelector(".canvas-wrap");
@@ -111,11 +118,12 @@ document.getElementById("zoom").addEventListener("input", e => {
   canvasWrap.style.transform = "scale(" + (state.zoom/100) + ")";
 });
 
-bindRange("rings", "ringsVal", "rings", v => v, ringsParams);
-bindRange("symmetry", "symVal", "symmetry", v => v, ringsParams);
 bindRange("rotation", "rotVal", "rotation", v => v + "°");
 bindRange("emojiSize", "sizeVal", "emojiSize", v => v + "px");
-bindRange("spacing", "spaceVal", "spacing", v => (v/100).toFixed(1) + "×", ringsParams);
+
+// Shape strip and the current shape's generated sliders.
+renderShapeStrip(draw);
+renderShapeControls(draw);
 
 // Setup other controls
 document.getElementById("centerMode").addEventListener("change", e => {
@@ -134,7 +142,7 @@ document.getElementById("glow").addEventListener("change", e => {
   draw();
 });
 document.getElementById("alternate").addEventListener("change", e => {
-  ringsParams().alternate = e.target.checked;
+  currentParams().alternate = e.target.checked;
   draw();
 });
 document.getElementById("faceOutward").addEventListener("change", e => {
@@ -144,23 +152,17 @@ document.getElementById("faceOutward").addEventListener("change", e => {
 
 // Setup shuffle button
 document.getElementById("shuffle").addEventListener("click", () => {
-  const p = ringsParams();
-  p.rings = 3 + Math.floor(Math.random()*9);
-  p.symmetry = 4 + Math.floor(Math.random()*18);
+  // A random shape with random values for its own controls.
+  const shape = SHAPES[Math.floor(Math.random()*SHAPES.length)];
+  state.shape = shape.id;
+  state.shapeParams[shape.id] = randomParams(shape, Math.random);
   state.rotation = Math.floor(Math.random()*360);
-  p.spacing = 60 + Math.floor(Math.random()*90);
-  p.alternate = Math.random() > 0.4;
   state.faceOutward = Math.random() > 0.6;
 
-  document.getElementById("rings").value = p.rings;
-  document.getElementById("ringsVal").textContent = p.rings;
-  document.getElementById("symmetry").value = p.symmetry;
-  document.getElementById("symVal").textContent = p.symmetry;
+  syncShapeStrip();
+  renderShapeControls(draw);
   document.getElementById("rotation").value = state.rotation;
   document.getElementById("rotVal").textContent = state.rotation + "°";
-  document.getElementById("spacing").value = p.spacing;
-  document.getElementById("spaceVal").textContent = (p.spacing/100).toFixed(1) + "×";
-  document.getElementById("alternate").checked = p.alternate;
   document.getElementById("faceOutward").checked = state.faceOutward;
 
   // shuffle palette selection too, pick 4-7 random emoji
