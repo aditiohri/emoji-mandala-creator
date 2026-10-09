@@ -51,6 +51,16 @@
         <p class="hint">Emoji you type or paste are added automatically. On phone, tap the field to bring up your emoji keyboard; on Mac, try Cmd+Ctrl+Space. Or browse the full library.</p>
       </div>
 
+      <div class="field saved-palettes">
+        <div class="saved-head">
+          <span class="group-label" id="savedLabel">Saved palettes</span>
+          <button class="btn small" id="savePalette" type="button">Save palette</button>
+        </div>
+        <p class="saved-note" id="savedNote" role="status" hidden></p>
+        <ul class="saved-list" id="savedList" aria-labelledby="savedLabel"></ul>
+        <p class="hint" id="savedEmpty">No saved palettes yet. Save this one to come back to it later on this device.</p>
+      </div>
+
       <dialog id="emojiDialog">
         <div class="emoji-dialog-head">
           <strong>Browse emoji</strong>

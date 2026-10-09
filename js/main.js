@@ -23,6 +23,7 @@ import {
 import { recordUse, topEmoji } from "./usage.js";
 import { activeBackgroundIndex } from "./backgrounds.js";
 import { addedNote } from "./addnote.js";
+import { setupSavedPalettes } from "./savedPalettesUI.js";
 
 // Preset backgrounds
 const PRESET_BACKGROUNDS = [
@@ -65,6 +66,7 @@ if (usedEmoji && usedEmoji.length > 0) {
 renderPaletteChips(draw);
 renderEmojiGrid(draw);
 setupCustomEmojiInput(draw);
+setupSavedPalettes(draw);
 
 // Setup emoji picker dialog
 const emojiDialog = document.getElementById("emojiDialog");
