@@ -71,7 +71,22 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
       Deferred minors (final review: none block): thumbnails redraw on
       every draw (revisit with heavier shapes); unused `target` param in
       `bindRange`; spiral `layout` reads `this.overlap` (call as a method).
-- [ ] Slice 4 — lotus / rosette.
+- [ ] Slice 4 — lotus / rosette. Spec §5 "Lotus / rosette" is thinner
+      than the spiral's was; settle these in a short design chat (with
+      screenshots of options) before planning:
+      - `lib.petalCurve` geometry is undefined: where the tip and the two
+        side emoji sit, and how Petal length maps to it.
+      - Layer radii: how layers 1–4 space out, and how they relate to the
+        center emoji and to `radius`.
+      - Crowding under spec §1 "Crowded groups" (remove elements, keep the
+        structure): drop outer layers? Fewer petals would change the
+        count, the very thing rings stopped doing. And how `overlap` 0.15
+        (petals may touch) fits the all-pairs sweep test.
+      - `polygonPoints` is listed for slice 4 but only yantra (slice 5)
+        needs it; decide whether to defer it (YAGNI).
+      Carry-overs from slice 3: thumbnails redraw on every draw (revisit
+      now that a third tile arrives); `slice3.mjs` section 6 has per-shape
+      `SETS`: add a lotus entry rather than a new script.
 - [ ] Slice 5 — yantra.
 - [ ] Slice 6 — kolam / rangoli lattice.
 
