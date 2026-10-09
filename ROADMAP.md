@@ -196,6 +196,19 @@ sessions, in this order:
   `~/.tools/playwright/sp.mjs` (57 real-input checks) and 104 unit tests.
   Follow-ups: "Update" a saved palette in place, reorder the saved list,
   export/import.
+  Deferred minors (whole-branch review: none block):
+  - Row lookups interpolate the stored id into a selector
+    (`.saved-row[data-id="${id}"]`); a hand-edited id containing `"` throws
+    on delete or rename. Use `CSS.escape` or compare `dataset.id`.
+  - A rename to a taken 24-character name becomes "<24 chars> 2"; reload cuts
+    it back to 24, so two rows share a name. Cap the base so base + suffix
+    fits.
+  - Two tabs overwrite each other's saves (list loaded once at startup;
+    accepted in the spec).
+  - Rename input has no `maxlength`; over-long input is trimmed silently.
+  - The status note toggles `hidden` and its text in the same tick (some
+    screen readers miss the first announcement; the background note does the
+    same); `list-style: none` drops the list role in Safari.
 
 ## 3. Monetization experiment: template + build in public (TABLED 2026-10-09; do not start)
 
