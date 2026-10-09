@@ -275,7 +275,17 @@ is sticky and unreliable on touch; screen-reader use should be easy.
      palette, export. Per step note what was announced, where it stuck,
      whether it finished.
   4. Merge the three into the findings list.
-- [ ] **Fix slices**, cut from the findings. Likely shapes: native or proper
+- **Fix slices (decided 2026-10-09; findings and statuses in
+  `docs/a11y-audit-findings.md`).** A (names, headings, announcements) and B
+  (contrast, focus ring, forced colors, reduced motion) are DONE, commits
+  `84e0545` and `6eefc85`. **D, phone layout and touch** has its design
+  settled in `docs/superpowers/specs/2026-10-09-phone-layout-design.md`
+  (sticky mandala strip about 33vh, collapsible sections with Show/Hide all,
+  44 px touch targets, slider-swipe fix, landscape two-column); next to build.
+  **C, palette** (Quick add as buttons, a non-drag way to reorder, cross-row
+  drag, fewer tab stops) still needs a design chat. Slices C and D share
+  `styles.css` and `index.html`, so build them one after the other.
+- [ ] **Fix slices**, original note, cut from the findings. Likely shapes: native or proper
   ARIA sliders with bigger hit targets; a non-drag way to reorder chips
   (move up/down buttons or a keyboard mode); labels, focus order and live
   announcements for changes to the mandala. Deferred a11y minors from
