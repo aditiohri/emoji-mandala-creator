@@ -14,6 +14,7 @@ import {
   setupShareButton
 } from "./export.js";
 import { recordUse, topEmoji } from "./usage.js";
+import { activeBackgroundIndex } from "./backgrounds.js";
 
 // Preset backgrounds
 const PRESET_BACKGROUNDS = [
@@ -240,6 +241,7 @@ function renderBackgroundPresets() {
 
   const customBackgrounds = getStoredCustomBackgrounds();
   const allBackgrounds = [...PRESET_BACKGROUNDS, ...customBackgrounds];
+  const activeIdx = activeBackgroundIndex(allBackgrounds, state.background);
 
   allBackgrounds.forEach((bg, idx) => {
     const swatch = document.createElement("div");
@@ -258,12 +260,7 @@ function renderBackgroundPresets() {
       swatch.style.backgroundImage = `url('${bg.dataUrl}')`;
     }
 
-    // Mark as active if selected
-    if (state.background.type === bg.type) {
-      if (bg.type === "system" || idx === state.background.idx) {
-        swatch.classList.add("active");
-      }
-    }
+    if (idx === activeIdx) swatch.classList.add("active");
 
     // Remove button for custom backgrounds
     if (idx >= PRESET_BACKGROUNDS.length) {
@@ -274,31 +271,37 @@ function renderBackgroundPresets() {
       removeBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
+        const wasActive = idx === activeIdx;
         const customs = getStoredCustomBackgrounds();
         customs.splice(idx - PRESET_BACKGROUNDS.length, 1);
         saveCustomBackgrounds(customs);
-        renderBackgroundPresets();
-        if (state.background.idx === idx) {
-          setBackground(PRESET_BACKGROUNDS[0]);
+        if (wasActive) {
+          setBackground(PRESET_BACKGROUNDS[0], 0);
+        } else {
+          // Later swatches shifted down one; keep the saved index in step.
+          if (state.background.idx > idx) state.background.idx--;
+          saveCurrentBackground();
+          renderBackgroundPresets();
         }
       });
       swatch.appendChild(removeBtn);
     }
 
-    swatch.addEventListener("click", () => setBackground(bg));
+    swatch.addEventListener("click", () => setBackground(bg, idx));
     presetsDiv.appendChild(swatch);
   });
 }
 
-function setBackground(bg) {
+// `idx` is the swatch's position in presets + customs (see activeBackgroundIndex).
+function setBackground(bg, idx = bg.idx) {
   if (bg.type === "system") {
-    state.background = { type: "system" };
+    state.background = { type: "system", idx };
   } else if (bg.type === "solid") {
-    state.background = { type: "solid", color: bg.color };
+    state.background = { type: "solid", color: bg.color, idx };
   } else if (bg.type === "gradient") {
-    state.background = { type: "gradient", color1: bg.color1, color2: bg.color2, angle: bg.angle || 0 };
+    state.background = { type: "gradient", color1: bg.color1, color2: bg.color2, angle: bg.angle || 0, idx };
   } else if (bg.type === "image" && bg.imageElement) {
-    state.background = { type: "image", imageElement: bg.imageElement, idx: bg.idx };
+    state.background = { type: "image", imageElement: bg.imageElement, idx };
   }
 
   saveCurrentBackground();
@@ -339,15 +342,17 @@ function setupBackgroundControls() {
       const color = bgColor1Input.value;
       customs.push({ type: "solid", color, label: "Custom" });
       saveCustomBackgrounds(customs);
+      setBackground(customs[customs.length - 1], PRESET_BACKGROUNDS.length + customs.length - 1);
     } else if (type === "gradient") {
       const color1 = bgColor1Input.value;
       const color2 = bgColor2Input.value;
       const angle = parseInt(bgAngleInput.value);
       customs.push({ type: "gradient", color1, color2, angle, label: "Custom" });
       saveCustomBackgrounds(customs);
+      setBackground(customs[customs.length - 1], PRESET_BACKGROUNDS.length + customs.length - 1);
+    } else {
+      renderBackgroundPresets();
     }
-
-    renderBackgroundPresets();
   });
 
   bgImageInput.addEventListener("change", async (e) => {

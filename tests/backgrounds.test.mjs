@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { drawBackground, getBackgroundLuminance } from "../js/backgrounds.js";
+import { drawBackground, getBackgroundLuminance, activeBackgroundIndex } from "../js/backgrounds.js";
 
 function mockCtx() {
   const calls = [];
@@ -49,4 +49,34 @@ test("image luminance is computed once per image element", () => {
     assert.equal(a, b);
     assert.equal(created, 1);
   } finally { delete globalThis.document; }
+});
+
+const ALL = [
+  { type: "system" },
+  { type: "solid", color: "#ff6b4a" },
+  { type: "gradient", color1: "#111111", color2: "#222222", angle: 45 },
+  { type: "image", dataUrl: "data:image/jpeg;base64,AAA" },
+  { type: "solid", color: "#ff6b4a" }, // custom duplicate of index 1
+];
+
+test("activeBackgroundIndex: system, solid and gradient match by value", () => {
+  assert.equal(activeBackgroundIndex(ALL, { type: "system" }), 0);
+  assert.equal(activeBackgroundIndex(ALL, { type: "solid", color: "#ff6b4a" }), 1);
+  assert.equal(activeBackgroundIndex(ALL, { type: "gradient", color1: "#111111", color2: "#222222", angle: 45 }), 2);
+  assert.equal(activeBackgroundIndex(ALL, { type: "gradient", color1: "#111111", color2: "#222222", angle: 90 }), -1);
+});
+
+test("activeBackgroundIndex: image matches by its data URL, not by a stale idx", () => {
+  const cur = { type: "image", imageElement: { src: "data:image/jpeg;base64,AAA" }, idx: 9 };
+  assert.equal(activeBackgroundIndex(ALL, cur), 3);
+});
+
+test("activeBackgroundIndex: current.idx wins when it still matches (custom duplicate of a preset)", () => {
+  assert.equal(activeBackgroundIndex(ALL, { type: "solid", color: "#ff6b4a", idx: 4 }), 4);
+  assert.equal(activeBackgroundIndex(ALL, { type: "solid", color: "#ff6b4a", idx: 2 }), 1); // stale idx falls back to first match
+});
+
+test("activeBackgroundIndex: nothing matches -> -1", () => {
+  assert.equal(activeBackgroundIndex(ALL, { type: "solid", color: "#123456" }), -1);
+  assert.equal(activeBackgroundIndex(ALL, null), -1);
 });

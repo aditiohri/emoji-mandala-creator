@@ -143,3 +143,26 @@ export function drawBackground(ctx, W, H, opts) {
 
   return dark;
 }
+
+// Does a swatch entry describe the same background as `current` (state.background)?
+function sameBackground(entry, current) {
+  if (!entry || !current || entry.type !== current.type) return false;
+  switch (entry.type) {
+    case "system": return true;
+    case "solid": return entry.color === current.color;
+    case "gradient":
+      return entry.color1 === current.color1 && entry.color2 === current.color2 &&
+        (entry.angle || 0) === (current.angle || 0);
+    case "image": return !!current.imageElement && current.imageElement.src === entry.dataUrl;
+    default: return false;
+  }
+}
+
+// Index of the swatch in `all` that is the current background, or -1. Matches by
+// value so it survives removing other swatches; `current.idx` breaks ties when a
+// custom swatch duplicates a preset.
+export function activeBackgroundIndex(all, current) {
+  if (!current) return -1;
+  if (typeof current.idx === "number" && sameBackground(all[current.idx], current)) return current.idx;
+  return all.findIndex(entry => sameBackground(entry, current));
+}
