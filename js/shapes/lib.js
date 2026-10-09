@@ -16,6 +16,8 @@ export function chord(r, count){
 
 // Evenly spaced ring: shrink to fit; below `floor`, keep `floor` and re-space
 // with fewer points. count 0 means the ring is dropped (fewer than 3 fit).
+// Shapes treat a returned count below the requested one as "doesn't fit" and
+// drop the group rather than use fewer points (spec §1 "Crowded groups").
 export function fitRing({ r, count, emojiPx, overlap, floor }){
   const need = emojiPx * (1 - overlap);
   const scale = Math.min(1, chord(r, count) / need);

@@ -45,8 +45,8 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
       arrow keys on a focused × move its chip; drop slots go stale if the
       page scrolls mid-drag; duplicate check treats ❤ and ❤️ as different;
       rings' groups still declare a `reverse` that cancels out.
-- [ ] **Slice 2 follow-ups** (fresh whole-session review, 2026-10-08).
-      Status after the slice 3 design (2026-10-08):
+- [x] **Slice 2 follow-ups** (fresh whole-session review, 2026-10-08).
+      All done (slice 3 design + implementation, small-followups):
       - [x] **Spec §5 rings text** rewritten to match the slice 2 code.
       - [x] **Crowded cores look jumbled** — decided from screenshots of
             four options: a ring that can't hold its full symmetry is
@@ -60,8 +60,17 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
             in your palette)"). The ❤/❤️ mismatch no longer matters.
       - [x] **Chips have no accessible name** — slice 3, including × labels
             that tell duplicates apart ("Remove 🌸 (2 of 2)").
-- [ ] Slice 3 — phyllotaxis spiral, shape thumbnail strip, generated
-      per-shape controls, Shuffle picks a shape.
+- [x] **Slice 3 — spiral, shape strip, generated controls, Shuffle picks
+      a shape** (merged 2026-10-08). Phyllotaxis spiral (Seeds, Divergence,
+      Bands); shape strip of live thumbnails above the shape's generated
+      sliders, each shape remembering its values; Shuffle picks a shape;
+      crowded rings dropped (open halo) instead of re-spaced; palette chips
+      scroll on phones (`pan-y`), have accessible names, and × buttons tell
+      duplicates apart. Checked by `~/.tools/playwright/slice3.mjs` (90
+      checks, real input, screenshots judged by eye).
+      Deferred minors (final review: none block): thumbnails redraw on
+      every draw (revisit with heavier shapes); unused `target` param in
+      `bindRange`; spiral `layout` reads `this.overlap` (call as a method).
 - [ ] Slice 4 — lotus / rosette.
 - [ ] Slice 5 — yantra.
 - [ ] Slice 6 — kolam / rangoli lattice.

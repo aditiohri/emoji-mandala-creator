@@ -29,7 +29,7 @@ shape and every combination of palette and control values:
 | Fidelity | Recognizable but generative: shapes borrow a tradition's *structure* and stay parametric. Canonical fixed figures (e.g. a true Sri Yantra) may come later as presets. |
 | Palette size | Palette length stays free. Each shape uses at most N emoji, **first N in palette order**. The UI shows which are in use. **Drag-to-reorder** chips. |
 | Emoji assignment | Shapes give groups *roles/slots*; a shared assigner gives each group a symmetric repeating pattern. |
-| Crowding | Per-shape slider ranges **plus** a fit rule (shrink, then re-space with fewer emoji) as a safety net. Shapes may opt into some overlap. |
+| Crowding | Per-shape slider ranges **plus** a fit rule (shrink, then remove elements, keeping the structure — see "Crowded groups") as a safety net. Shapes may opt into some overlap. |
 | Picking a shape | Thumbnail strip of live previews (palette-coloured, shape defaults), like the background swatches. Shuffle also picks a random shape. |
 | Switching shapes | Each shape remembers its own control values for the session; shared controls are global. |
 | Backdrop | *(revised 2026-10-08)* Visible guide lines are **dropped**: no "Guide rings", and shapes draw no guides. Shapes still lay emoji out along their underlying geometry (rings, petals, triangles, grid); only the drawn lines go. The Backdrop select goes away; **"Soft glow"** becomes an on/off switch in the Background section. |
@@ -285,10 +285,13 @@ is saved per device next to the background (`localStorage` key
 
 ## 4. UI
 
-- **Shape strip** — new "Shape" field at the top of the controls: ~72px
+- **Shape strip** — new "Shape" field *(placement decided in the slice 3
+  plan review: after Quick add and View zoom, directly above the generated
+  sliders, so the palette stays first)*: ~72px
   canvas tiles (buttons, `aria-pressed`, `aria-label` = shape label),
   re-rendered when palette or background changes (≤ 6 tiles; cheap with the
-  luminance cache). Wraps on phones; no horizontal page scroll.
+  luminance cache; slice 3 simply redraws them on every draw — revisit when
+  heavier shapes add tiles). Wraps on phones; no horizontal page scroll.
 - **Per-shape controls** — the Rings / Symmetry / Spacing sliders in
   `index.html` are replaced (slice 3) by a container that `shapeControls.js`
   fills from `shape.controls`, reusing today's slider markup and classes.
