@@ -195,12 +195,21 @@ function getStoredCustomBackgrounds() {
   }
 }
 
+// Returns whether the write stuck (it throws when the storage quota is full).
 function saveCustomBackgrounds(backgrounds) {
   try {
     localStorage.setItem("mandala.backgrounds", JSON.stringify(backgrounds));
+    return true;
   } catch(e) {
     console.warn("Failed to save backgrounds:", e);
+    return false;
   }
+}
+
+function showBackgroundNote(message) {
+  const note = document.getElementById("bgNote");
+  note.textContent = message;
+  note.hidden = !message;
 }
 
 function getStoredBackground() {
@@ -250,6 +259,10 @@ function downscaleImage(img, maxSize = 800) {
 
 function renderBackgroundPresets() {
   const presetsDiv = document.getElementById("bgPresets");
+  // The list is rebuilt on every change; keep keyboard focus on the same swatch.
+  const focused = document.activeElement?.closest?.("#bgPresets .bg-preset");
+  const focusIdx = presetsDiv.contains(document.activeElement) && document.activeElement.classList.contains("bg-select")
+    ? focused.dataset.idx : null;
   presetsDiv.innerHTML = "";
 
   const customBackgrounds = getStoredCustomBackgrounds();
@@ -259,6 +272,14 @@ function renderBackgroundPresets() {
   allBackgrounds.forEach((bg, idx) => {
     const swatch = document.createElement("div");
     swatch.className = "bg-preset";
+    // The wrapper only positions things; the real control is this button, so
+    // swatches take Tab, Enter and Space and the remove badge isn't nested in one.
+    const pick = document.createElement("button");
+    pick.type = "button";
+    pick.className = "bg-select";
+    pick.setAttribute("aria-label", bg.label || bg.type);
+    pick.setAttribute("aria-pressed", String(idx === activeIdx));
+    swatch.appendChild(pick);
     swatch.dataset.type = bg.type;
     swatch.dataset.idx = idx;
 
@@ -301,9 +322,11 @@ function renderBackgroundPresets() {
       swatch.appendChild(removeBtn);
     }
 
-    swatch.addEventListener("click", () => selectBackground(bg, idx));
+    pick.addEventListener("click", () => selectBackground(bg, idx));
     presetsDiv.appendChild(swatch);
   });
+
+  if (focusIdx !== null) presetsDiv.querySelector(`.bg-preset[data-idx="${focusIdx}"] .bg-select`)?.focus();
 }
 
 // Stored image swatches only carry a data URL; load it before selecting.
@@ -320,6 +343,7 @@ function selectBackground(bg, idx) {
 // `idx` is the swatch's position in presets + customs (see activeBackgroundIndex).
 function setBackground(bg, idx = bg.idx) {
   backgroundPick++;
+  showBackgroundNote("");
   if (bg.type === "system") {
     state.background = { type: "system", idx };
   } else if (bg.type === "solid") {
@@ -392,13 +416,21 @@ function setupBackgroundControls() {
         const dataUrl = downscaleImage(img, 800);
         const customs = getStoredCustomBackgrounds();
         customs.push({ type: "image", dataUrl, label: "Custom image" });
-        saveCustomBackgrounds(customs);
+        const saved = saveCustomBackgrounds(customs);
 
         // Reload the image for immediate use
         const newImg = new Image();
         newImg.onload = () => {
-          const bg = { type: "image", imageElement: newImg, idx: PRESET_BACKGROUNDS.length + customs.length - 1 };
-          setBackground(bg);
+          if (saved) {
+            setBackground({ type: "image", imageElement: newImg, idx: PRESET_BACKGROUNDS.length + customs.length - 1 });
+            return;
+          }
+          // Storage is full: use the image for now, but say it won't survive a reload.
+          backgroundPick++;
+          state.background = { type: "image", imageElement: newImg, idx: -1 };
+          renderBackgroundPresets();
+          draw();
+          showBackgroundNote("This image is too big to save on this device. It's used for now, but it will be gone when you reload. Remove some saved backgrounds to make room.");
         };
         newImg.src = dataUrl;
       };

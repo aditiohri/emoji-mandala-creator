@@ -175,10 +175,18 @@ Done on branch `small-followups` (merged 2026-10-08):
 Next up (decided 2026-10-09; build in public is tabled). Two separate
 sessions, in this order:
 
-- **Session A, small fixes (one branch, no design chat):** cream preset
-  visibility, localStorage-quota warning on image upload, keyboard-selectable
-  background swatches. Use a new branch name (`small-followups` already
-  exists from the 2026-10-08 merge; its worktree is stale).
+- [x] **Session A, small fixes** (done 2026-10-09, branch
+  `small-followups-2`; the old `small-followups` worktree is stale):
+  - Light-cream preset: inactive swatches get a `--line` border, so pale
+    colours show on the panel.
+  - Quota: `saveCustomBackgrounds` reports failure; a too-big image upload is
+    still drawn for the session (no swatch, not saved) and a note under the
+    swatches says it will be gone after reload. The note clears on the next
+    pick.
+  - Keyboard: each swatch holds a real `<button class="bg-select">` (Tab,
+    Enter, Space, `aria-pressed`, label); focus is restored after the list
+    re-renders. Checked by `~/.tools/playwright/fu2.mjs` (real key presses
+    and file chooser, screenshots judged by eye) and 89 unit tests.
 - **Session B, save palettes:** a feature, so it starts with a design chat
   (names, per-device `localStorage` vs shareable, UI to load/rename/delete,
   any paid gate, interplay with the usage-based startup palette), then spec
@@ -189,10 +197,6 @@ Still open:
 - **New idea: save palettes (maybe a paid feature).** The palette is
   rebuilt from usage counts on every load, so palette order and duplicates
   last for the session only. Persisting named palettes could be premium.
-- Background swatches aren't keyboard-selectable (they're divs).
-- An upload that exceeds the localStorage quota only logs a warning, so
-  the image won't survive a reload.
-- The light-cream preset is nearly invisible on the cream panel.
 
 ## 3. Monetization experiment: template + build in public (TABLED 2026-10-09; do not start)
 
