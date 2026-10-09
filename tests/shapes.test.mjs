@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { polar, fitFloor } from "../js/shapes/lib.js";
+import { polar } from "../js/shapes/lib.js";
 import rings from "../js/shapes/rings.js";
 import { SHAPES, getShape } from "../js/shapes/index.js";
 
@@ -90,17 +90,15 @@ test("the slider has no dead range: every spacing step moves the rings", () => {
   }
 });
 
-test("crowded ring is re-spaced evenly with fewer emoji, at the floor scale", () => {
-  const p = { ...base, rings: 12, symmetry: 24 };
+test("crowded rings are dropped, never re-spaced: every ring has the full symmetry", () => {
+  const p = { ...base, rings: 12, symmetry: 24, emojiSize: 80, radius: 500 - 80 * 0.9 };
   const { placements, groups } = rings.layout(p);
-  const g = groups.findIndex(gr => gr.kind === "cycle" && gr.size < 24);
-  assert.ok(g > 0, "some ring was re-spaced");
-  const ps = placements.filter(q => q.group === g);
-  assert.equal(ps.length, groups[g].size);
-  const angles = ps.map(q => q.heading).map(a => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)).sort((a, b) => a - b);
-  const stepA = 2 * Math.PI / ps.length;
-  angles.forEach((a, i) => i && assert.ok(Math.abs(a - angles[i - 1] - stepA) < 1e-9));
-  assert.ok(ps.every(q => q.scale === fitFloor(44, 14)));
+  const ringGroups = groups.filter(g => g.kind === "cycle");
+  assert.ok(ringGroups.length < 12, "some inner rings were dropped");
+  assert.ok(ringGroups.every(g => g.size === 24));
+  // The dropped rings are the inner ones: what remains starts well clear of the center.
+  const inner = Math.min(...placements.filter(q => q.heading !== null).map(q => Math.hypot(q.x, q.y)));
+  assert.ok(inner > 150, `innermost ring at ${inner}`);
 });
 
 // Spec §7 sweep. Every pair of placements, every slider value of the rings shape.
@@ -118,6 +116,7 @@ test("sweep: finite, inside radius, groups cover indices, no overlaps, scale >= 
     }
     groups.forEach((g, gi) => {
       assert.ok(g.size >= 1, tag);
+      if (g.kind === "cycle") assert.equal(g.size, sym, tag + " full symmetry");
       const idx = new Set(P.filter(p => p.group === gi).map(p => p.index));
       assert.equal(idx.size, g.size, tag);
       for (let i = 0; i < g.size; i++) assert.ok(idx.has(i), tag);

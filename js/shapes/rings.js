@@ -46,9 +46,11 @@ export default {
       if (r > radius) break;
       const base = Math.max(floor, 1 - (ring-1)*0.03);
       const cap = Math.min(base, gapCap, ring === 1 ? s1 : 1);
+      // Crowded: a ring that can't hold its full symmetry is dropped, never
+      // re-spaced with fewer emoji (spec §1 "Crowded groups").
       const fit = fitRing({ r, count: symmetry, emojiPx: emojiSize, overlap, floor });
-      if (fit.count === 0) continue;
-      const n = fit.count;
+      if (fit.count < symmetry) continue;
+      const n = symmetry;
       const scale = Math.min(cap, fit.scale);
       const alt = alternate && ring % 2 === 0;
       const dir = alt ? -1 : 1;
