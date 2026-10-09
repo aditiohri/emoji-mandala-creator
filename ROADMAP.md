@@ -94,8 +94,10 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
         harmless today, because only layer 1 is ever dropped.
       - Still open from slice 3: the unused `target` param in `bindRange`,
         and spiral `layout` reads `this.overlap`.
-- [ ] Slice 5 — yantra. Spec §5 "Yantra" predates the lotus decisions.
-      Settle these in a short design chat (with screenshot grids) before
+- [ ] Slice 5 — yantra. **Designed and planned 2026-10-08** (spec §1/§5
+      updated; plan `docs/superpowers/plans/2026-10-08-shapes-slice-5-yantra.md`;
+      implementation is next). The questions below were all settled in the spec.
+      Original open questions, settle these in a short design chat (with screenshot grids) before
       prototyping:
       - Its lotus layer is "tips only". Slice 4 found that tips alone look
         like scattered dots, so outlined petals were chosen. Should the

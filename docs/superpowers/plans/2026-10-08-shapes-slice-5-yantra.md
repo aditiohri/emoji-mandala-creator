@@ -312,6 +312,30 @@ Run: `node --test` → all pass (72 tests). `tests/lotus.test.mjs` passing
 unchanged is the check that the lotus didn't move. The app is unchanged in
 the browser.
 
+- [ ] **Step 4b: Lotus equality check (the move must not change any layout)**
+
+Snapshot main's shapes into a scratch dir, then compare every lotus
+combination against the branch. Run from the worktree root:
+
+```bash
+S=$(mktemp -d) && git archive main js/shapes | tar -x -C "$S"
+cat > "$S/lotuseq.mjs" <<EOF
+import a from "$S/js/shapes/lotus.js";
+import b from "$PWD/js/shapes/lotus.js";
+let n = 0, diff = 0;
+for (const layers of [1,2,3]) for (let petals = 4; petals <= 16; petals++) for (let width = 30; width <= 90; width += 5)
+for (const alternate of [true,false]) for (const centerMode of ["emoji","empty"]) for (let emojiSize = 20; emojiSize <= 80; emojiSize += 6) {
+  const p = { layers, petals, width, alternate, centerMode, radius: 500 - emojiSize*0.9, emojiSize, minFont: 14 }; n++;
+  if (JSON.stringify(a.layout(p)) !== JSON.stringify(b.layout(p))) diff++;
+}
+console.log("lotus layouts identical in " + (n - diff) + " of " + n + " combinations");
+EOF
+node "$S/lotuseq.mjs"
+```
+
+Expected: `lotus layouts identical in 22308 of 22308 combinations`. Any
+difference means the move changed the lotus; fix before committing.
+
 - [ ] **Step 5: Commit**
 
 ```bash
