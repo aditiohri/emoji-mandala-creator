@@ -71,22 +71,29 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
       Deferred minors (final review: none block): thumbnails redraw on
       every draw (revisit with heavier shapes); unused `target` param in
       `bindRange`; spiral `layout` reads `this.overlap` (call as a method).
-- [ ] Slice 4 — lotus / rosette. Spec §5 "Lotus / rosette" is thinner
-      than the spiral's was; settle these in a short design chat (with
-      screenshots of options) before planning:
-      - `lib.petalCurve` geometry is undefined: where the tip and the two
-        side emoji sit, and how Petal length maps to it.
-      - Layer radii: how layers 1–4 space out, and how they relate to the
-        center emoji and to `radius`.
-      - Crowding under spec §1 "Crowded groups" (remove elements, keep the
-        structure): drop outer layers? Fewer petals would change the
-        count, the very thing rings stopped doing. And how `overlap` 0.15
-        (petals may touch) fits the all-pairs sweep test.
-      - `polygonPoints` is listed for slice 4 but only yantra (slice 5)
-        needs it; decide whether to defer it (YAGNI).
-      Carry-overs from slice 3: thumbnails redraw on every draw (revisit
-      now that a third tile arrives); `slice3.mjs` section 6 has per-shape
-      `SETS`: add a lotus entry rather than a new script.
+- [x] **Slice 4 — lotus** (merged 2026-10-08). Layers of outlined petals
+      (`lib.petalCurve`: open base, widest a third of the way up, pointed
+      tip) in bands that widen outward; Layers / Petals / Petal width
+      sliders and "Interleave petal layers"; a third strip tile, and
+      Shuffle can pick it. Crowding keeps the petal count: too-narrow
+      petals become spokes, and tips, side pairs and spoke emoji are kept or
+      dropped in every petal at once. Checked by
+      `~/.tools/playwright/slice4.mjs` (125 checks, real input, screenshots
+      judged by eye). The design questions are all settled (spec §1
+      "Lotus"); `polygonPoints` moves to slice 5.
+      Carry-over closed: three thumbnails redraw in about 1 ms, so they
+      keep redrawing on every draw.
+      Known and accepted: 3 layers × 4 petals at width 90 gives bowl-shaped
+      outer petals. With an empty center and big emoji, layer 1 may keep
+      only its tips or be dropped (spec §1 "Crowded groups").
+      Deferred minors (final review: none block):
+      - The lotus sweep's 0.95 slack isn't needed: the worst pair is at
+        1 − 1e-15 of the required distance. It's the convention across all
+        shape tests, but it could be tightened to catch regressions.
+      - Interleave picks layers by number, not by kept position. This is
+        harmless today, because only layer 1 is ever dropped.
+      - Still open from slice 3: the unused `target` param in `bindRange`,
+        and spiral `layout` reads `this.overlap`.
 - [ ] Slice 5 — yantra.
 - [ ] Slice 6 — kolam / rangoli lattice.
 
