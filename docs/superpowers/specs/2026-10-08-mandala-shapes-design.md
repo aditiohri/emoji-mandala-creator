@@ -1,6 +1,6 @@
 # Customizable mandala shapes — design
 
-Status: approved (2026-10-08), revised after two reviews; toggles decided 2026-10-08 (§1, §4). Tracker: `ROADMAP.md` item 1.
+Status: approved (2026-10-08), revised after two reviews; toggles decided 2026-10-08 (§1, §4); lotus decided 2026-10-08 (§1 "Lotus", §5). Tracker: `ROADMAP.md` item 1.
 Each slice in §6 gets its own implementation plan.
 
 ## 1. Intent
@@ -34,11 +34,12 @@ shape and every combination of palette and control values:
 | Switching shapes | Each shape remembers its own control values for the session; shared controls are global. |
 | Backdrop | *(revised 2026-10-08)* Visible guide lines are **dropped**: no "Guide rings", and shapes draw no guides. Shapes still lay emoji out along their underlying geometry (rings, petals, triangles, grid); only the drawn lines go. The Backdrop select goes away; **"Soft glow"** becomes an on/off switch in the Background section. |
 | Face outward | Shared. Every placement carries a `heading`; the renderer applies it: the glyph's top points away from the center. *(Toggles decision, 2026-10-08)* Kept as is: once colouring is symmetric (slice 2), directional emoji (🦋🌊🔥🌙) form a clear starburst at defaults. Round emoji (✨🌸💠) show little change, and that is accepted. |
-| Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. *(Toggles decision, 2026-10-08)* For rings, the visible effect is the half-step offset of every other ring (straight spokes → staggered lattice); the direction reversal never shows for rings: even rings are emitted in reverse angular order and also marked `reverse`, and the two cancel (found in the slice 2 final review; harmless, kept). Shapes that emit forward (lotus, kolam) do show `reverse` with p = 3. So rings keep the behaviour but the switch is renamed **"Stagger alternate rings"**; the state key stays `alternate`. Options judged by screenshot and rejected: a progressive twist (spiral arms; overlaps the spiral shape) and swapping colours on alternate rings (hard to tell from off). |
+| Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. *(Toggles decision, 2026-10-08)* For rings, the visible effect is the half-step offset of every other ring (straight spokes → staggered lattice); the direction reversal never shows for rings: even rings are emitted in reverse angular order and also marked `reverse`, and the two cancel (found in the slice 2 final review; harmless, kept). Shapes that emit forward and use `reverse` (kolam) do show it with p = 3; the lotus's Alternate is a half-petal offset instead (§5). So rings keep the behaviour but the switch is renamed **"Stagger alternate rings"**; the state key stays `alternate`. Options judged by screenshot and rejected: a progressive twist (spiral arms; overlaps the spiral shape) and swapping colours on alternate rings (hard to tell from off). |
 | Toggle switches | *(2026-10-08)* Every switch must toggle when its **visible pill** is clicked with a mouse or tapped, not only via its text label. Today's `<div class="switch">` around a 0×0 checkbox fails this; switches become `<label class="switch">`. Verified with real Playwright locator clicks on the pill, never JS `checked =`/`click()`. |
 | Soft glow | *(2026-10-08, slice 2 final review)* Glow inner stop raised to 0.22 (light) / 0.30 (dark) alpha so the switch reads at a glance at defaults; 0.10 / 0.16 was barely visible. |
 | Crowded groups | *(2026-10-08, slice 3 design, chosen from screenshots of four options)* **When crowded, remove elements and keep the structure; never jump to an unrelated count.** Rings: a ring that can't hold its full `symmetry` at the floor scale is **dropped**, not re-spaced with fewer emoji, so the crowded core becomes an open halo around the center emoji instead of a scatter of unrelated counts (8, 15, 21 around 24 spokes). Rejected: snapping to a divisor of symmetry (still busy for odd symmetry), halving, keeping slice 2's behaviour. Spiral: lower the seed count, and drop the seeds that would hit the center emoji. Later shapes follow the same rule (fewer petals/detail/grid dots, never an irregular layout). |
 | Phone chip drag | *(2026-10-08, slice 3 design)* Chips use `touch-action: pan-y`: a vertical swipe that starts on a chip scrolls the page (with `none` it was blocked); a drag that starts sideways reorders, and may then move in any direction, including across rows. Press-and-hold was rejected as more code and more iOS-specific risk. |
+| Lotus | *(2026-10-08, slice 4 design, chosen from screenshot grids)* Petals are **outlined**: a tip emoji plus emoji spaced about one emoji apart along both sides of a pointed-arch outline (open base, widest a third of the way up), not the 3 emoji per petal first written here, which read as scattered dots. Layers fill the space from the center emoji to `radius` with **outer bands wider**, leaving no gaps. The slider is **"Petal width"** (how much of the room to the neighbouring petal a petal takes), not "Petal length". **Layers 1–3**: at 4, layers tangle into one mass. Crowding: the petal count never changes; a petal too narrow for two sides becomes a **spoke** (emoji down its axis). Rejected: dropping layers whose petals are thin (it emptied the canvas at emoji size 80), fewer petals. `polygonPoints` waits for yantra (slice 5). |
 | Build order | Engine → pattern/palette rules → spiral (+ strip, per-shape controls) → lotus → yantra → kolam. |
 
 **Assumptions (not stated by the user):** the chosen shape and its settings
@@ -79,7 +80,7 @@ center). At least one ring is always drawn (checked over every slider value).
 ```
 js/shapes/index.js     registry: ordered SHAPES list, getShape(id)
 js/shapes/lib.js       shared geometry: polar(), chord(), fitRing(), fitGap(),
-                       polygonPoints(), petalCurve()
+                       petalCurve() (slice 4), polygonPoints() (slice 5)
 js/shapes/rings.js     Concentric rings (port of today's draw loop)
 js/shapes/spiral.js    Phyllotaxis spiral
 js/shapes/lotus.js     Lotus / rosette
@@ -290,8 +291,8 @@ is saved per device next to the background (`localStorage` key
   sliders, so the palette stays first)*: ~72px
   canvas tiles (buttons, `aria-pressed`, `aria-label` = shape label),
   re-rendered when palette or background changes (≤ 6 tiles; cheap with the
-  luminance cache; slice 3 simply redraws them on every draw — revisit when
-  heavier shapes add tiles). Wraps on phones; no horizontal page scroll.
+  luminance cache; slice 3 simply redraws them on every draw. Measured in
+  slice 4 with three tiles: about 1 ms per redraw, so this stays). Wraps on phones; no horizontal page scroll.
 - **Per-shape controls** — the Rings / Symmetry / Spacing sliders in
   `index.html` are replaced (slice 3) by a container that `shapeControls.js`
   fills from `shape.controls`, reusing today's slider markup and classes.
@@ -382,14 +383,52 @@ The spiral's spacing is nearly uniform (nearest-neighbour 61–65 px at 144
 seeds), so its core never scatters the way rings did. Alternate: `null` in v1. "Empty"
 removes the center emoji. `maxEmoji` 6.
 
-**Lotus / rosette** — layers of petals around the center. Controls: Layers
-1–4 (default 2), Petals 4–16 (default 8), Petal length 50–150 (default 100).
-Each petal has a tip emoji and two side emoji. Per layer, two groups:
-tips (`cycle`, size = petals, index = petal number) and sides (`cycle`,
-size = petals, **both sides of petal j share index j**, so each petal is
-mirror-symmetric). Alternate ("Interleave petal layers", default on): odd
-layers offset by half a petal. Petal positions use `lib.petalCurve`.
-"Empty" removes the center emoji. `maxEmoji` 6, `overlap` 0.15.
+**Lotus** *(rewritten 2026-10-08 in the slice 4 design, §1 "Lotus")*. Label
+"Lotus". Controls: Layers 1–3 (default 2), Petals 4–16 (default 8, Shuffle
+5–12), Petal width 30–90 % (default 80, Shuffle 50–90, shown as `80%`).
+`maxEmoji` 6, `overlap` 0.15: every pair of emoji may come 15 % closer than
+touching (petals may touch their neighbours), which the §7 sweep already
+measures through `shape.overlap`. With `P` petals, `half = π/P`, and
+`need(a, b) = emojiSize·(a+b)/2·(1-overlap)`:
+
+1. **Bands.** `r0 = need(1.05, 1)` with the center emoji, 0 without. The
+   space from `r0` to `radius` is split into `layers` bands with weights
+   2, 3, 4 (outer bands wider). Layer `k`'s tips sit on its band's outer
+   edge `T`; its petals start at `B = r0` for layer 1, otherwise
+   `B = min(inner edge + 0.6·need(1,1), T - need(1,1))`, so outer petals
+   start just clear of the inner layer's tips.
+2. **Interleave.** Petal `j`'s axis is at `2πj/P`, plus `half` on even
+   layers when Alternate ("Interleave petal layers", default on) is on.
+   Every emoji of a petal has `heading` = the petal's axis, so Face outward
+   turns the whole petal one way.
+3. **Scale.** `fitRing({ r: T, count: P })` on the ring of tips gives the
+   layer's single scale `s`. If its count is below `P`, the layer is
+   dropped.
+4. **Outline.** `lib.petalCurve(B, T, phiMax)` maps `t ∈ [0,1]` (base to
+   tip) to `{ r: B + t·(T-B), phi: phiMax·sin(π·(0.25 + 0.75t)) }`, `phi`
+   being the angle off the petal's axis: open base (0.71·phiMax), widest at
+   t = 1/3, pointed tip. With `rw = B + (T-B)/3` (the widest point),
+   `phiMax = min(half·width/100, half - asin(min(1, need(s,s)/(2rw))))`, so
+   the widest points of neighbouring petals never collide. The petal is
+   the tip plus side pairs at `±phi`, spaced `emojiSize·s` apart along the
+   outline from the tip down to the base.
+5. **Spoke.** If `2·rw·sin(phiMax) < need(s,s)` the petal is too narrow for
+   two sides: the tip plus emoji down its axis every `emojiSize·s`, down to
+   `B`.
+6. **Crowding** (§1 "Crowded groups"). Units are tried in order (the tip,
+   then each side pair or spoke emoji, from the tip toward the base). A unit
+   is kept only if each of its points clears the inner layers and every
+   point kept so far, **in every petal**, so every petal keeps the same
+   units: the layer stays rotationally symmetric and each petal
+   mirror-symmetric. If the tip doesn't fit, the layer is dropped. The petal
+   count never changes.
+
+Groups per layer, inside out: tips (`cycle`, size `P`, index = petal
+number), then sides (`cycle`, size `P`, both sides of petal `j` and every
+spoke emoji share index `j`); a layer whose petals kept only their tips has
+no sides group. "Empty" removes the center emoji. With an odd `P` that
+neither 2 nor 3 divides, each group is a single emoji (§1 accepted
+consequence).
 
 **Yantra** — inside out, with fixed role slots:
 - bindu (center, slot 0);
@@ -455,8 +494,9 @@ subagents, screenshot-verified by me before merge, and ticked off in
    clamped).
 3. **Phyllotaxis spiral + shape strip + generated per-shape controls +
    Shuffle picks a shape.**
-4. **Lotus / rosette** (adds `petalCurve`, `polygonPoints`).
-5. **Yantra.**
+4. **Lotus** (adds `petalCurve`; `polygonPoints` moves to slice 5, which is
+   the only shape that needs it).
+5. **Yantra** (adds `polygonPoints`).
 6. **Kolam / rangoli lattice.**
 
 ## 7. Testing
