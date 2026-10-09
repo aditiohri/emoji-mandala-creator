@@ -80,3 +80,15 @@ test("activeBackgroundIndex: nothing matches -> -1", () => {
   assert.equal(activeBackgroundIndex(ALL, { type: "solid", color: "#123456" }), -1);
   assert.equal(activeBackgroundIndex(ALL, null), -1);
 });
+
+test("activeBackgroundIndex: a gradient with no angle equals angle 0", () => {
+  const all = [{ type: "gradient", color1: "#111111", color2: "#222222" }];
+  assert.equal(activeBackgroundIndex(all, { type: "gradient", color1: "#111111", color2: "#222222", angle: 0 }), 0);
+});
+
+test("activeBackgroundIndex: identical image uploaded twice -> idx picks the one selected", () => {
+  const all = [{ type: "image", dataUrl: "d" }, { type: "image", dataUrl: "d" }];
+  const cur = { type: "image", imageElement: { src: "d" } };
+  assert.equal(activeBackgroundIndex(all, { ...cur, idx: 1 }), 1);
+  assert.equal(activeBackgroundIndex(all, cur), 0);
+});

@@ -385,7 +385,7 @@ select{
   background:color-mix(in srgb, var(--coral) 12%, var(--paper));
   border-bottom:1px solid var(--line);
 }
-.emoji-added:empty{ background:transparent; }
+.emoji-added:empty{ background:transparent; border-bottom-color:transparent; }
 emoji-picker{
   width:100%;
   height:420px;
@@ -441,7 +441,11 @@ emoji-picker{
   opacity:0;
   transition:opacity 0.1s;
 }
-.bg-preset:hover .bg-remove{ opacity:1; }
+.bg-preset:hover .bg-remove,
+.bg-preset:focus-within .bg-remove,
+.bg-remove:focus-visible{ opacity:1; }
+.bg-remove:focus-visible{ outline:2px solid var(--coral); outline-offset:1px; }
+@media (hover:none){ .bg-remove{ opacity:1; } } /* no hover on touch: always show the badge */
 
 .bg-custom-section{
   margin-top:8px;

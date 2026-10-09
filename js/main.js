@@ -70,6 +70,14 @@ document.getElementById("closeEmojiDialog").addEventListener("click", () => {
 emojiDialog.addEventListener("click", (e) => {
   if (e.target === emojiDialog) emojiDialog.close();
 });
+// The palette is dimmed (or hidden, on phones) behind the dialog, so confirm each pick inside it.
+const emojiAdded = document.getElementById("emojiAdded");
+let addedTimer = null;
+function showAddedNote(text) {
+  emojiAdded.textContent = text;
+  clearTimeout(addedTimer);
+  addedTimer = setTimeout(() => { emojiAdded.textContent = ""; }, 2500);
+}
 emojiPicker.addEventListener("emoji-click", (e) => {
   const emoji = e.detail && e.detail.unicode;
   if (!emoji) return;
@@ -81,14 +89,6 @@ emojiPicker.addEventListener("emoji-click", (e) => {
   showAddedNote(addedNote(emoji, state.palette));
 });
 
-// The palette is dimmed (or hidden, on phones) behind the dialog, so confirm each pick inside it.
-const emojiAdded = document.getElementById("emojiAdded");
-let addedTimer = null;
-function showAddedNote(text) {
-  emojiAdded.textContent = text;
-  clearTimeout(addedTimer);
-  addedTimer = setTimeout(() => { emojiAdded.textContent = ""; }, 2500);
-}
 
 // Setup sliders. `target` returns the object the value lives in.
 function bindRange(id, labelId, key, fmt, target = () => state){
@@ -278,6 +278,7 @@ function renderBackgroundPresets() {
       const removeBtn = document.createElement("button");
       removeBtn.className = "bg-remove";
       removeBtn.textContent = "✕";
+      removeBtn.setAttribute("aria-label", "Remove background");
       removeBtn.type = "button";
       removeBtn.addEventListener("click", (e) => {
         e.preventDefault();
@@ -304,15 +305,19 @@ function renderBackgroundPresets() {
 }
 
 // Stored image swatches only carry a data URL; load it before selecting.
+// A later selection supersedes an image that is still loading.
+let backgroundPick = 0;
 function selectBackground(bg, idx) {
   if (bg.type !== "image" || bg.imageElement) return setBackground(bg, idx);
+  const mine = ++backgroundPick;
   const img = new Image();
-  img.onload = () => setBackground({ ...bg, imageElement: img }, idx);
+  img.onload = () => { if (mine === backgroundPick) setBackground({ ...bg, imageElement: img }, idx); };
   img.src = bg.dataUrl;
 }
 
 // `idx` is the swatch's position in presets + customs (see activeBackgroundIndex).
 function setBackground(bg, idx = bg.idx) {
+  backgroundPick++;
   if (bg.type === "system") {
     state.background = { type: "system", idx };
   } else if (bg.type === "solid") {
@@ -389,12 +394,11 @@ function setupBackgroundControls() {
 
         // Reload the image for immediate use
         const newImg = new Image();
-        newImg.src = dataUrl;
         newImg.onload = () => {
           const bg = { type: "image", imageElement: newImg, idx: PRESET_BACKGROUNDS.length + customs.length - 1 };
           setBackground(bg);
-          renderBackgroundPresets();
         };
+        newImg.src = dataUrl;
       };
       img.src = event.target.result;
     };
