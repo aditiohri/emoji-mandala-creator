@@ -129,20 +129,25 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
       - Still open from slices 3–4: lotus sweep's 0.95 slack; Interleave
         picks layers by number; unused `target` param in `bindRange`; spiral
         `layout` reads `this.overlap`.
-- [ ] **Slice 6 — kolam / rangoli lattice** (designed and prototyped
-      2026-10-09; plan written, awaiting approval; not built). Each lattice
-      dot is an emoji inside a diamond of line emoji; neighbouring diamonds
-      touch at shared "knots". Dots, knots and lines have separate colours;
-      Grid (3–9, odd) and Spacing sliders and "Checker colours". Crowding
+- [x] **Slice 6 — kolam / rangoli lattice** (merged 2026-10-09; the build
+      order is finished). Each lattice dot is an emoji inside a diamond of
+      line emoji; neighbouring diamonds touch at shared "knots". Dots, knots
+      and lines have separate colours; Grid (3–9, odd) and Spacing sliders
+      and "Checker colours"; fifth strip tile; Shuffle can pick it. Crowding
       drops rings of dots until the diamonds show, then thins the middle of
       each side first; every point is kept or dropped with all its symmetric
-      copies. Spec §1 "Kolam" and §5; plan
-      `docs/superpowers/plans/2026-10-09-shapes-slice-6-kolam.md`; prototype
-      in `.claude/worktrees/slice6-proto2` (git-ignored), browser script
-      `~/.tools/playwright/slice6.mjs`. Last shape: the build order ends here.
+      copies. Checked by `~/.tools/playwright/slice6.mjs` (177 checks) and
+      89 unit tests. Spec §1 "Kolam" and §5; plan
+      `docs/superpowers/plans/2026-10-09-shapes-slice-6-kolam.md`.
       Known and accepted: Grid 9 shows the same as Grid 7 at the default
       emoji size (the lattice loses a ring of dots); at size 80 Grid 5–9 show
       Grid 3.
+      Carried over (minors): lotus sweep's 0.95 slack; Interleave picks
+      layers by number; unused `target` param in `bindRange`; spiral `layout`
+      reads `this.overlap`; yantra minors from slice 5; Checker colours does
+      nothing visible with a 3-emoji palette (slots 0/3 and 1/4 collapse;
+      within the §3 contract, could be noted in the spec); kolam test nits
+      (knot test title overstates, sweep early-break undocumented).
 
 Models: Opus writes plans and the whole-branch review; Sonnet/Haiku
 implement and review tasks (user asked 2026-10-08 to use Sonnet and Haiku
