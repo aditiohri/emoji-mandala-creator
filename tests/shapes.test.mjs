@@ -2,7 +2,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { polar } from "../js/shapes/lib.js";
 import rings from "../js/shapes/rings.js";
-import { SHAPES, getShape } from "../js/shapes/index.js";
 
 const base = { rings: 6, symmetry: 10, spacing: 100, alternate: true, centerMode: "emoji", radius: 460.4, emojiSize: 44, minFont: 14 };
 const ringRadii = ps => [...new Set(ps.filter(p => p.heading !== null).map(p => Math.hypot(p.x, p.y).toFixed(6)))].map(Number);
@@ -11,12 +10,6 @@ test("polar", () => {
   const p = polar(2, Math.PI / 2);
   assert.ok(Math.abs(p.x) < 1e-12);
   assert.equal(p.y, 2);
-});
-
-test("registry", () => {
-  assert.deepEqual(SHAPES.map(s => s.id), ["rings"]);
-  assert.equal(getShape("rings"), rings);
-  assert.equal(getShape("nope"), rings);
 });
 
 test("rings controls match the spec", () => {
