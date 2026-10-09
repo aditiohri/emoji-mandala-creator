@@ -21,7 +21,7 @@ export function showExportImage(dataUrl){
   exportImg.src = dataUrl;
   exportPanel.hidden = false;
   announce("Your mandala is ready below. Press and hold the image to save or share it.");
-  exportPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+  exportPanel.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
 }
 
 export function setupExportPanel(){
