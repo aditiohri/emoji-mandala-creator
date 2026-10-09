@@ -37,6 +37,8 @@ shape and every combination of palette and control values:
 | Alternate | Shape-defined: each shape says whether it supports it, what it does, and what the toggle is called; hidden otherwise. *(Toggles decision, 2026-10-08)* For rings, the visible effect is the half-step offset of every other ring (straight spokes → staggered lattice); the direction reversal never shows for rings: even rings are emitted in reverse angular order and also marked `reverse`, and the two cancel (found in the slice 2 final review; harmless, kept). Shapes that emit forward (lotus, kolam) do show `reverse` with p = 3. So rings keep the behaviour but the switch is renamed **"Stagger alternate rings"**; the state key stays `alternate`. Options judged by screenshot and rejected: a progressive twist (spiral arms; overlaps the spiral shape) and swapping colours on alternate rings (hard to tell from off). |
 | Toggle switches | *(2026-10-08)* Every switch must toggle when its **visible pill** is clicked with a mouse or tapped, not only via its text label. Today's `<div class="switch">` around a 0×0 checkbox fails this; switches become `<label class="switch">`. Verified with real Playwright locator clicks on the pill, never JS `checked =`/`click()`. |
 | Soft glow | *(2026-10-08, slice 2 final review)* Glow inner stop raised to 0.22 (light) / 0.30 (dark) alpha so the switch reads at a glance at defaults; 0.10 / 0.16 was barely visible. |
+| Crowded groups | *(2026-10-08, slice 3 design, chosen from screenshots of four options)* **When crowded, remove elements and keep the structure; never jump to an unrelated count.** Rings: a ring that can't hold its full `symmetry` at the floor scale is **dropped**, not re-spaced with fewer emoji, so the crowded core becomes an open halo around the center emoji instead of a scatter of unrelated counts (8, 15, 21 around 24 spokes). Rejected: snapping to a divisor of symmetry (still busy for odd symmetry), halving, keeping slice 2's behaviour. Spiral: lower the seed count, and drop the seeds that would hit the center emoji. Later shapes follow the same rule (fewer petals/detail/grid dots, never an irregular layout). |
+| Phone chip drag | *(2026-10-08, slice 3 design)* Chips use `touch-action: pan-y`: a vertical swipe that starts on a chip scrolls the page (with `none` it was blocked); a drag that starts sideways reorders, and may then move in any direction, including across rows. Press-and-hold was rejected as more code and more iOS-specific risk. |
 | Build order | Engine → pattern/palette rules → spiral (+ strip, per-shape controls) → lotus → yantra → kolam. |
 
 **Assumptions (not stated by the user):** the chosen shape and its settings
@@ -47,6 +49,12 @@ modules with no build step.
 **Accepted consequence:** with a prime symmetry that neither 2 nor 3
 divides (5, 7, 11, 13, ...) every ring is a single emoji. That is
 symmetric and calm; it is intended, not a bug.
+
+**Accepted consequence (2026-10-08):** because crowded rings are dropped
+(§1 "Crowded groups"), large emoji with high symmetry leave an open center
+(about a third of the canvas at size 80, symmetry 24), and at extremes few
+rings remain (rings 4 → 1 at spacing 0.5×, symmetry 23, size 80, empty
+center). At least one ring is always drawn (checked over every slider value).
 
 ## 2. Approaches considered
 
@@ -205,7 +213,9 @@ above), `chord(r, count)`, `fitRing` and `fitGap`; both fit helpers take the
   `2r·sin(π/m) ≥ MIN_SCALE·emojiPx·(1-overlap)`; the shape then places `m`
   positions **evenly re-spaced** around the ring (not a subset), so the
   ring stays symmetric for any `m`. If `m < 3`, `count` is 0 and the group is
-  dropped.
+  dropped. *(From slice 3)* Rings no longer use the re-spaced count: a ring with
+  `m < symmetry` is dropped (§1 "Crowded groups"). The helper keeps its
+  contract for later shapes, which still follow the same rule.
 - **`fitGap({ gap, emojiPx, overlap, other?, floor })` → scale** — the same
   shrink for a radial gap between neighbouring groups: the largest `s ≤ 1`
   with `emojiPx·(s + other)/2·(1-overlap) ≤ gap`, where `other` is the
@@ -296,8 +306,9 @@ is saved per device next to the background (`localStorage` key
   use it" (or "...using all 3 of your emoji"). Updates whenever `used`
   changes.
 - **Drag-to-reorder** (Pointer Events, mouse and touch):
-  - chips get `touch-action: none`, so touch drags don't scroll or
-    `pointercancel`;
+  - *(slice 3)* chips get `touch-action: pan-y` (§1 "Phone chip drag"):
+    vertical swipes scroll the page, sideways-starting drags reorder.
+    Slice 2 used `touch-action: none`;
   - a drag starts only after ~6px of movement; **`setPointerCapture` is
     called only then**, so a tap on × still reaches the × button;
   - during the drag the chip moves visually (transform) and the drop slot
@@ -320,38 +331,52 @@ Ranges and defaults are starting points, tuned per slice by screenshot.
 "Center" below is group 0 (`solid`, slot 0, scale 1.05, `heading: null`)
 when `centerMode` is `"emoji"`, and absent when `"empty"`.
 
-**Concentric rings** — today's geometry: ring `k` at radius
-`k·ringSpacing`, `ringSpacing = (spacing/100)·(radius/rings)`, emitted in
-order `s = 0..symmetry-1` at angle `dir·2πs/symmetry + rot`, where
-`dir = -1` and `rot = π/symmetry` on even rings when Alternate is on, else
-`dir = 1, rot = 0` (Alternate is labelled "Stagger alternate rings", §1). Placement `index = s` (emit order, not angular
-order — with `dir = -1` they differ). Base scale `1 - (k-1)·0.03`
-(clamped to the fit floor from slice 2). Heading = angle. Groups:
-center, then one `cycle` group per ring (`reverse` on even rings when
-Alternate is on). Fit (slice 2+): `fitRing` per ring, `fitGap` against
-`ringSpacing` (and ring 1 against the center); if the radial gap fails at
-`MIN_SCALE`, `ringSpacing` is raised to the minimum that fits and rings
-beyond `radius` are dropped. From slice 2 the outer ring always sits within `radius` (before, spacing
-> 1.0× pushed outer rings off the canvas).
-*(Decided in the slice 2 plan, 2026-10-08)* With `f = spacing/100`, the
-radial step is `min(f, 2 - f)·radius/rings`: 1.0× spreads rings evenly to
-the edge, below 1.0× packs them toward the center (as today), above 1.0×
-packs them toward the **edge**, leaving an open center (the outer ring stays
-on `radius`, ring 1 sits at `radius - (rings-1)·step`). So the slider has no
-dead range at roomy settings; when rings are crowded at the floor scale,
-spacing has no room left to act, and that is accepted. Ring 1 vs the center:
-shrink ring 1 first (`fitGap` with `other: 1.05`), then push every ring out
-by the remaining shortfall. "Empty" removes the center emoji. `maxEmoji` 6.
+**Concentric rings** *(rewritten 2026-10-08 to match the slice 2 code,
+`js/shapes/rings.js`)*. With `f = spacing/100`:
+
+1. Radial step `step = min(f, 2 - f)·radius/rings`, then raised to at least
+   `emojiSize·floor·(1-overlap)` so rings are never closer than an emoji at
+   the floor scale. `gapCap = fitGap({ gap: step })` caps every ring's scale.
+2. Inner offset `inner = f > 1 ? max(0, radius - rings·step) : 0`. So 1.0×
+   spreads rings evenly to the edge, below 1.0× packs them toward the
+   center, above 1.0× packs them toward the **edge** (outer ring on
+   `radius`, open center). The slider has no dead range at roomy settings;
+   when rings are crowded at the floor scale, spacing has no room left to
+   act, and that is accepted.
+3. Ring 1 vs the center emoji (only when shown): shrink ring 1 first,
+   `s1 = min(gapCap, fitGap({ gap: inner + step, other: 1.05 }))`, then push
+   every ring out by the remaining shortfall,
+   `inner = max(inner, emojiSize·(1.05 + s1)/2·(1-overlap) - step)`.
+4. Ring `k = 1..rings` sits at `r = inner + k·step`; the loop stops at the
+   first ring with `r > radius`. Base scale `max(floor, 1 - (k-1)·0.03)`;
+   cap `min(base, gapCap, k = 1 ? s1 : 1)`.
+5. `fitRing({ r, count: symmetry })` gives the ring's fitted count and
+   scale. *(From slice 3, §1 "Crowded groups")* if the fitted count is
+   below `symmetry` the ring is **dropped**, so every drawn ring has
+   `n = symmetry`. (Slice 2 kept it, evenly re-spaced with fewer emoji.)
+   Final scale `min(cap, fit.scale)`.
+6. Emit `s = 0..n-1` at `angle = dir·2πs/n + offset`: on even rings with Alternate on, `dir = -1` and
+   `offset = π/n`; otherwise `dir = 1`, `offset = 0` (Alternate is labelled
+   "Stagger alternate rings", §1). Placement `index = s` (emit order, not
+   angular order). Heading = angle.
+
+Groups: center, then one `{ size: n, kind: "cycle", reverse }` per ring,
+`reverse` on even rings with Alternate on (it cancels against the reversed
+emit order, §1). "Empty" removes the center emoji. `maxEmoji` 6.
 
 **Phyllotaxis spiral** — seed `i = 1..n`: angle `i·divergence`, radius
 `R·√(i/n)`, heading = angle. Controls: Seeds 40–300 (default 144),
 Divergence 137.0°–138.0° step 0.05 (default 137.5; the narrow range keeps
 spacing even — wider values bunch seeds into spokes), Bands 1–5 (default 3).
 Groups: center (if shown), then `bands` `solid` groups splitting the seeds
-into **equal-count** runs by index (equal-area annuli). Fit: compute the
-actual minimum nearest-neighbour distance (brute force, n ≤ 300) and
-shrink to it; at `MIN_SCALE`, lower `n` until it fits. Seeds closer to the
-center emoji than the need are dropped. Alternate: `null` in v1. "Empty"
+into **equal-count** runs by index (equal-area annuli), over the seeds
+that remain after fitting. `R = radius`. Fit (§1 "Crowded groups"): compute
+the actual minimum nearest-neighbour distance (brute force, n ≤ 300) and
+shrink to it (all seeds share one scale); at the floor, lower `n` until it
+fits. Seeds closer to the center emoji than
+`emojiSize·(1.05 + scale)/2` are dropped (1–5 seeds in the prototype).
+The spiral's spacing is nearly uniform (nearest-neighbour 61–65 px at 144
+seeds), so its core never scatters the way rings did. Alternate: `null` in v1. "Empty"
 removes the center emoji. `maxEmoji` 6.
 
 **Lotus / rosette** — layers of petals around the center. Controls: Layers

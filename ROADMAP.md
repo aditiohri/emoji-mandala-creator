@@ -45,46 +45,59 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
       arrow keys on a focused × move its chip; drop slots go stale if the
       page scrolls mid-drag; duplicate check treats ❤ and ❤️ as different;
       rings' groups still declare a `reverse` that cancels out.
-- [ ] **Slice 2 follow-ups** (fresh whole-session review, 2026-10-08:
-      ready to push, nothing Critical/Important). Do the first before
-      slice 3; the rest can ride along with slice 3 or later.
-      - **Spec §5 rings text is stale**: it still gives the slice 1
-        formula (`k·ringSpacing`, angles over `symmetry`). Code uses the
-        `min(f, 2-f)` step plus an `inner` offset, and spaces each ring
-        over its *fitted* count `n`. Fix before new shapes copy it.
-      - **Crowded cores look jumbled** (e.g. rings 12, symmetry 24, size
-        80): inner rings get fitted to unrelated counts (some prime → one
-        emoji), so the center reads as a scatter, not a pattern. No
-        overlap, each ring symmetric, but not "elegant every time". Idea:
-        drop an inner ring instead of cutting it far below `symmetry`, or
-        prefer counts that divide `symmetry`. Judge crowded combos by eye,
-        not only defaults and extremes.
-      - **Phone: chips block page scroll** (`touch-action:none`). A swipe
-        starting on a chip doesn't scroll; the palette is 2+ rows on a
-        phone. Idea: allow vertical pan, start a drag on horizontal
-        movement or a short hold.
-      - **Browse gives no feedback** when the picked emoji is already in
-        the palette (now skipped silently).
-      - **Chips have no accessible name or reorder hint** (e.g.
-        `aria-label` "✨, position 1 of 8, arrow keys to move").
+- [ ] **Slice 2 follow-ups** (fresh whole-session review, 2026-10-08).
+      Status after the slice 3 design (2026-10-08):
+      - [x] **Spec §5 rings text** rewritten to match the slice 2 code.
+      - [x] **Crowded cores look jumbled** — decided from screenshots of
+            four options: a ring that can't hold its full symmetry is
+            dropped (open halo around the center); same rule for later
+            shapes (spec §1 "Crowded groups"). Implemented in slice 3.
+      - [x] **Phone: chips block page scroll** — decided: chips get
+            `touch-action: pan-y` (spec §1 "Phone chip drag"). Slice 3.
+      - [x] **Browse gives no feedback** — resolved differently in
+            small-followups: duplicates are allowed on purpose (weights);
+            each pick shows an aria-live note in the dialog ("🌸 added (×2
+            in your palette)"). The ❤/❤️ mismatch no longer matters.
+      - [x] **Chips have no accessible name** — slice 3, including × labels
+            that tell duplicates apart ("Remove 🌸 (2 of 2)").
 - [ ] Slice 3 — phyllotaxis spiral, shape thumbnail strip, generated
       per-shape controls, Shuffle picks a shape.
 - [ ] Slice 4 — lotus / rosette.
 - [ ] Slice 5 — yantra.
 - [ ] Slice 6 — kolam / rangoli lattice.
 
-Models: Opus writes plans and reviews; Sonnet implements slices 1–3;
-Haiku slices 4–6 (escalate if it struggles). Screenshots are checked by
+Models: Opus writes plans and the whole-branch review; Sonnet/Haiku
+implement and review tasks (user asked 2026-10-08 to use Sonnet and Haiku
+wherever possible to save usage); Haiku slices 4–6 (escalate if it
+struggles). Screenshots are checked by
 the orchestrating session before each merge.
 
 ## 2. Small follow-ups
 
-- Selecting a newly created custom background right after adding it
-  (currently it's added but not selected).
-- Image-upload backgrounds are untested in a browser.
-- Most-used counts only increment when an emoji is added to the palette,
-  so emoji already in the default palette aren't counted until removed
-  and re-added; decide whether that's good enough.
+Done on branch `small-followups` (merged 2026-10-08):
+
+- [x] **Select new custom background.** "Add to backgrounds" selects,
+  saves and redraws the new swatch. Also fixed: solid and gradient swatches
+  were never highlighted as active, and removing a custom swatch now keeps
+  the selection correct.
+- [x] **Image-upload backgrounds.** Tested in a browser with the file
+  chooser: selected, drawn, and restored on reload. Fixed: clicking a
+  stored image swatch did nothing; the remove ✕ was unreachable, then a
+  full-swatch overlay that deleted on any click; it's now a corner badge,
+  visible on touch and focus.
+- [x] **Most-used counts only rise on add** — decided: leave as is. The
+  startup palette is a convenience, and "most used" means "most often
+  added". Alternative for later: count emoji in saved or shared images.
+
+Still open:
+
+- **New idea: save palettes (maybe a paid feature).** The palette is
+  rebuilt from usage counts on every load, so palette order and duplicates
+  last for the session only. Persisting named palettes could be premium.
+- Background swatches aren't keyboard-selectable (they're divs).
+- An upload that exceeds the localStorage quota only logs a warning, so
+  the image won't survive a reload.
+- The light-cream preset is nearly invisible on the cream panel.
 
 ## 3. Monetization experiment: template + build in public
 
