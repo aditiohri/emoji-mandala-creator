@@ -1,34 +1,7 @@
-import { polar, fitFloor, fitRing, petalCurve } from "./lib.js";
+import { polar, fitFloor, fitRing, petalOutline, petalSpoke } from "./lib.js";
 
 const CENTER_SCALE = 1.05;
 const OVERLAP = 0.15;
-
-// One petal on axis angle 0, as units of points { r, phi }: the tip first,
-// then each pair of side points from the tip down to the base, `step` apart
-// along the outline. A unit is kept or dropped whole, so petals stay
-// mirror-symmetric.
-function outline(B, T, phiMax, step){
-  const curve = petalCurve(B, T, phiMax), N = 400, arc = [0];
-  let prev = polar(B, curve(0).phi);
-  for (let i = 1; i <= N; i++){
-    const q = curve(i / N), p = polar(q.r, q.phi);
-    arc.push(arc[i - 1] + Math.hypot(p.x - prev.x, p.y - prev.y));
-    prev = p;
-  }
-  const m = Math.max(1, Math.floor(arc[N] / step)), units = [[{ r: T, phi: 0 }]];
-  for (let s = m - 1; s >= 0; s--){
-    const q = curve(arc.findIndex(a => a >= arc[N] * s / m - 1e-9) / N);
-    units.push([{ r: q.r, phi: q.phi }, { r: q.r, phi: -q.phi }]);
-  }
-  return units;
-}
-
-// A petal too narrow for two sides: the tip, then emoji down its axis.
-function spoke(B, T, step){
-  const units = [[{ r: T, phi: 0 }]];
-  for (let r = T - step; r >= B - 1e-9; r -= step) units.push([{ r, phi: 0 }]);
-  return units;
-}
 
 export default {
   id: "lotus",
@@ -73,7 +46,7 @@ export default {
       const rw = B + (T - B) / 3;
       const room = half - Math.asin(Math.min(1, need(s, s) / (2 * rw)));
       const phiMax = Math.min(room, half * width / 100);
-      const units = 2 * rw * Math.sin(phiMax) < need(s, s) ? spoke(B, T, step) : outline(B, T, phiMax, step);
+      const units = 2 * rw * Math.sin(phiMax) < need(s, s) ? petalSpoke(B, T, step) : petalOutline(B, T, phiMax, step);
       // Keep a unit only if each of its points clears the inner layers and
       // every point kept so far, in every petal. The same units are kept in
       // every petal, so the layer stays symmetric. No tip, no layer.
