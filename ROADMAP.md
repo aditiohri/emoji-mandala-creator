@@ -252,6 +252,15 @@ fixes touch the same UI files, so parallel orchestrators would conflict. Known
 pain: some sliders are hard to use on mobile; drag-reorder of palette chips
 is sticky and unreliable on touch; screen-reader use should be easy.
 
+> **REMINDER (2026-10-09): your turn.** Layer 2 (VoiceOver on the Mac) was
+> skipped (it needed Accessibility permission for Terminal; optional, can be
+> retried). Layer 3 is waiting on you: run
+> [`docs/a11y-device-checklist.md`](docs/a11y-device-checklist.md) on the
+> iPhone (Safari + VoiceOver) and the Samsung tablet (Chrome + TalkBack),
+> then send the results back. Only then does Claude merge the layers into the
+> ranked findings list (step 4 below). Playwright layer 1 is already done, and
+> its findings are held until then.
+
 - [ ] **Audit session** (first). Four layers, merged into one ranked findings
   list written here (severity, file, suggested fix, which fixes touch the
   same files):
