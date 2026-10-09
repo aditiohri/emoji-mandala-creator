@@ -151,7 +151,7 @@ does." Each slice gets its own plan in `docs/superpowers/plans/`.
 
 Models: Opus writes plans and the whole-branch review; Sonnet/Haiku
 implement and review tasks (user asked 2026-10-08 to use Sonnet and Haiku
-wherever possible to save usage); Haiku slices 4–6 (escalate if it
+wherever possible to save usage); Haiku slices 4–5, Sonnet slice 6 (escalate if it
 struggles). Screenshots are checked by
 the orchestrating session before each merge.
 
