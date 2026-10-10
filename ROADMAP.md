@@ -281,24 +281,31 @@ Let someone save a custom set of slider values for a shape and keep it in a
 collection, like saved palettes and saved backgrounds. Needs its own design
 (what is stored, where it lives, how it loads).
 
-## 5. MVP part 2: Greeting cards, add a message and send (decided MVP 2026-10-09; design in its own session first)
-
-**Next up (after item 4 merged).** Start with a brainstorm, one question at a time.
+## 5. MVP part 2: Greeting cards, add a message and send (5a is MVP; designed 2026-10-09)
 
 Let someone add their own text to a mandala and send it like a greeting card.
-Raised 2026-10-09; part of the MVP with item 4. Design in its own session
-(brainstorm, spec, plan). Goal: cards for different occasions (birthday,
-thank-you, holidays, etc.), so also consider occasion presets (starter text,
-fonts, palettes). Open questions to settle then:
-- Where the text goes (over the mandala, a frame or caption, or a card layout
-  around it) and how it is styled and wrapped.
-- Filename comes from the message instead of the default
-  `mandala-<date>.png`; share/save sheet text carries the message rather than
-  the default "Emoji mandala" title.
-- Accessibility from the start: the message as real text (alt text for the
-  exported image, readable by screen readers), contrast over any background.
-- Still static and serverless (no accounts); sending means the existing
-  save/share flow.
+Static and serverless; sending is the existing Save / Share flow. Brainstormed
+2026-10-09 from mockups of eight placements (A band over the mandala, B caption
+below, C above and below, D in the open center, E around the edge, F name as a
+ring of the pattern, G/H letters scattered into the pattern). G and H were
+rejected: scattered letters stop reading as words. Split into 5a-5d; only 5a
+is MVP.
+
+- [ ] **5a. Message on a card (MVP, next up).** Spec (approved pending review):
+  `docs/superpowers/specs/2026-10-09-greeting-cards-design.md`. New Card
+  section with a two-line message (greeting + sign-off), layouts Caption (B)
+  and Around the edge (E), a share note that follows the message until edited,
+  filename and share title from the message, message in the canvas name and
+  export alt text, halo for contrast on gradients and images.
+- [ ] **5b. More layouts (after MVP).** F, name repeated as a ring inside the
+  mandala: its own slice, since it must fit each of the five shapes without
+  colliding with their rings (spec §1 crowding rules). Then C (above and
+  below), D (open center) and A (band); each is small once 5a's layout slot
+  exists.
+- [ ] **5c. Occasion presets (after 5a).** Birthday, thank-you, holidays, etc.:
+  starter text plus matching palette and background, filling the 5a fields.
+- [ ] **5d. Text styling (after 5a).** Font choice, colour and size; bigger
+  text for the small phone-strip preview.
 
 ## 6. Accessibility, touch and screen reader (after the MVP, items 4-5; decided 2026-10-09)
 
