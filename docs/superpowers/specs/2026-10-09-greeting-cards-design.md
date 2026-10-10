@@ -9,9 +9,9 @@ names, 44 px targets, focus ring, forced colors, reduced motion); the phone stri
 and landscape layouts; a mandala with **no message** must export pixel-identical
 to today (`pixeldiff.mjs` baselines).
 
-**Out of scope** (ROADMAP 5b-5d and others): layouts A (band), C (above and
-below), D (center) and F (name as a ring); occasion presets; font / colour / size
-choices; feedback button (4b); per-shape saves (4c); device a11y checks; item 3.
+**Out of scope** (ROADMAP 5b-5d and others): layouts A (band over the mandala
+with an overlay), C (above and below), D (center) and F (name as a ring); occasion
+presets; font and colour choices (text *size* is in 5a, added 2026-10-09); feedback button (4b); per-shape saves (4c); device a11y checks; item 3.
 
 Mockups judged during the brainstorm (scratchpad, not committed): eight
 placements, A-H. Letters scattered into the pattern's symmetry (G, H) were
@@ -35,7 +35,12 @@ footer (Q4). Contents, in order:
    - **Around the edge** (mockup E)
    When the message is empty a hint under the group says "Type a message to see
    it on the card." Buttons stay enabled (the choice is remembered).
-3. **Share note** `<textarea id="shareNote">`, label "Share note", hint "Sent with
+3. **Text size** (added 2026-10-09): `<input type="range" id="cardTextSize">`, 70-130 %
+   in steps of 5, default 100, label shows the value, `aria-valuetext`. It scales every
+   size in both layouts (minimums too); the fit rules still apply, so big text on a long
+   message shrinks the mandala or wraps instead of leaving the card. Saved per device
+   (`localStorage["mandala.card.textSize"]`). Font and colour stay in 5d.
+4. **Share note** `<textarea id="shareNote">`, label "Share note", hint "Sent with
    the image when you share. Follows your message until you edit it." (Q5).
    Shown only where native file sharing exists (the same `canNativeShare` test
    that unhides the Share button today); hidden otherwise, with nothing in its
@@ -74,17 +79,22 @@ first card frame isn't in a fallback font.
 Sizes below are starting values in canvas pixels; tune by eye from screenshots,
 then record the final numbers in the code's constants.
 
-### Caption (B)
+### Caption (B) (revised 2026-10-09 after seeing it: text bigger, circle kept)
 
-- Mandala drawn at **76 %** of the canvas (diameter 760) centred at (500, 400).
-- Line 1: centred, baseline area around y = 865, starting at 64 px and shrinking
-  in 2 px steps to fit within 900 px width, minimum 40 px. If it still doesn't
-  fit at 40 px it **wraps to two rows** (break at the last space that fits;
-  otherwise break the word) and the mandala shrinks to **70 %** centred at
-  (500, 370), rows near y = 830 and 890.
-- Line 2: centred below line 1 (about y = 940, or 960 when line 1 wrapped),
-  Sora 40 px shrinking to a minimum of 28 px within 800 px; if still too wide
-  at 28 px, cut with an ellipsis (the 60-character cap makes this rare).
+The on-page preview is a circle, so the text must sit inside it (the saved PNG is
+square, but preview and PNG match). Rows go below the mandala and each row's width
+is limited to the circle's chord at its bottom edge, less a 36 px margin.
+
+- Mandala diameter M from 680 down to 520 (step 20), centred at x = 500 with 40 px
+  above it; the text zone starts 28 px below it. The first M that fits wins, so text
+  stays big and the mandala shrinks to make room.
+- Line 1 (Fraunces 600): one row from 84 px down to 72, then down to 56, trying
+  every M each time; if no single row fits, two rows at 60 down to 48 (break at the
+  last space that fits, else mid-word); at M = 520 a still-too-wide second row is
+  cut with an ellipsis.
+- Line 2 (Sora 500): 52 px down to 28. If it doesn't fit at 28, the mandala shrinks;
+  at M = 520 it wraps to two rows at 30 px, and only then is cut with an ellipsis.
+- All sizes are multiplied by the **Text size** setting (below).
 
 ### Around the edge (E)
 
@@ -94,7 +104,7 @@ then record the final numbers in the code's constants.
   at most **160°**, minimum 32 px (60 characters fit at 32 px).
 - Line 2 along the bottom on radius **425**, centred at the bottom, reading left
   to right and **upright** (glyphs rotated so their tops face the centre, the
-  path running counter-clockwise), Sora 40 px shrinking to 28 px within 140°.
+  path running counter-clockwise), Sora 50 px shrinking to 28 px within 140°.
 - Glyphs are measured per grapheme (`Intl.Segmenter`, falling back to
   `Array.from`) so emoji and combining marks are never split.
 
@@ -112,7 +122,7 @@ fallback (`toDataURL`) all carry the text with no extra step.
 - New **`js/card.js`**, pure (no DOM), unit-tested:
   - `cardLines(text)` → `[line1, line2]` trimmed, at most 2 lines of at most 60
     characters each; if line 1 is empty, line 2 moves up to become line 1.
-  - `cardLayout(lines, layoutId, measure)` → the mandala `area` plus a list of
+  - `cardLayout(lines, layoutId, measure, textSize = 100)` → the mandala `area` plus a list of
     text runs (`{ text, font, x, y }` for Caption, per-glyph
     `{ glyph, font, x, y, angle }` for the edge). `measure(text, font)` is
     injected (canvas `measureText` in the app, a stub in tests) so fitting,

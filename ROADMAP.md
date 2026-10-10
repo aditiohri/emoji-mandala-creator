@@ -297,19 +297,22 @@ is MVP.
   and Around the edge (E), a share note that follows the message until edited,
   filename and share title from the message, message in the canvas name and
   export alt text, halo for contrast on gradients and images.
-- [ ] **5b. More layouts (after MVP).** F, name repeated as a ring inside the
+- [ ] **5b. More layouts (after MVP).** First up: **A, text over the mandala on an
+  overlay band** (asked for 2026-10-09; it also lets long text be big without
+  shrinking the mandala). F, name repeated as a ring inside the
   mandala: its own slice, since it must fit each of the five shapes without
   colliding with their rings (spec §1 crowding rules). Then C (above and
   below), D (open center) and A (band); each is small once 5a's layout slot
   exists.
 - [ ] **5c. Occasion presets (after 5a).** Birthday, thank-you, holidays, etc.:
   starter text plus matching palette and background, filling the 5a fields.
-- [ ] **5d. Text styling (after 5a).** Font choice, colour and size; bigger
-  text for the small phone-strip preview.
+- [ ] **5d. Text styling (after 5a).** Font choice and colour; bigger text for the
+  small phone-strip preview. (Text *size* moved into 5a on 2026-10-09.)
 
-  5a result: `js/card.js` (pure, 39 unit tests; 154 in all), `renderTo` takes
+  5a result (revised 2026-10-09: bigger text kept inside the circular preview, Text
+  size slider 70-130 %): `js/card.js` (pure, 43 unit tests; 158 in all), `renderTo` takes
   `card = { area, runs }`, Card section after Background. Checked by
-  `~/.tools/playwright/cards.mjs` (59 real-input checks, axe 0 violations on
+  `~/.tools/playwright/cards.mjs` (69 real-input checks, axe 0 violations on
   desktop, dark and phone, contrast table) and `pixeldiff.mjs` (0 px on 8
   combos vs baselines `baselines/cards-5a-main`; the script was stale and was
   fixed first: shape slider ids, chip UI, exact compare).
