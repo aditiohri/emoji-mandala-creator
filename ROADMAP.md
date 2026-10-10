@@ -291,7 +291,7 @@ ring of the pattern, G/H letters scattered into the pattern). G and H were
 rejected: scattered letters stop reading as words. Split into 5a-5d; only 5a
 is MVP.
 
-- [ ] **5a. Message on a card (MVP, next up).** Spec (approved pending review):
+- [ ] **5a. Message on a card (MVP, next up).** Spec (approved 2026-10-09):
   `docs/superpowers/specs/2026-10-09-greeting-cards-design.md`. New Card
   section with a two-line message (greeting + sign-off), layouts Caption (B)
   and Around the edge (E), a share note that follows the message until edited,
