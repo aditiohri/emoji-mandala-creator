@@ -82,11 +82,16 @@ export function getBackgroundLuminance(bg) {
   return 0.5;
 }
 
-// Draw the canvas background. opts = { background, glow, emojiSize }
+// Draw the canvas background. opts = { background, glow, emojiSize, area }
+// (area = { cx, cy, size } in pixels: where the soft glow sits; default the whole canvas)
 export function drawBackground(ctx, W, H, opts) {
   const bg = opts.background;
   const cx = W/2, cy = H/2;
   const maxR = W/2 - opts.emojiSize*0.9;
+  // With a card message the mandala is smaller and off-centre: the glow follows it.
+  const glowX = opts.area ? opts.area.cx : cx;
+  const glowY = opts.area ? opts.area.cy : cy;
+  const glowR = (opts.area ? maxR * opts.area.size / W : maxR) * 1.05;
 
   // Determine if we should use dark colors
   const lum = getBackgroundLuminance(bg);
@@ -127,7 +132,7 @@ export function drawBackground(ctx, W, H, opts) {
 
   // Soft glow on top
   if (opts.glow){
-    const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,maxR*1.05);
+    const grad = ctx.createRadialGradient(glowX,glowY,0,glowX,glowY,glowR);
     if (dark){
       grad.addColorStop(0, "rgba(139,107,255,0.30)");
       grad.addColorStop(1, "rgba(139,107,255,0)");
@@ -137,7 +142,7 @@ export function drawBackground(ctx, W, H, opts) {
     }
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.arc(cx,cy,maxR*1.05,0,Math.PI*2);
+    ctx.arc(glowX,glowY,glowR,0,Math.PI*2);
     ctx.fill();
   }
 

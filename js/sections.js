@@ -1,5 +1,5 @@
 // Which control sections are open. Pure helpers; main.js does the DOM and storage.
-export const SECTION_IDS = ["palette", "shape", "background"];
+export const SECTION_IDS = ["palette", "shape", "background", "card"];
 
 // Desktop shows everything; a phone starts with just Shape open.
 export function defaultSections(isPhone){

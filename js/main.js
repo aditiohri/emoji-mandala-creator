@@ -18,8 +18,10 @@ import {
 import {
   setupExportPanel,
   setupSaveButton,
-  setupShareButton
+  setupShareButton,
+  canNativeShare
 } from "./export.js";
+import { cardLines, cardLabel, limitMessage, mirrorNote, noteAfterEdit } from "./card.js";
 import { recordUse, topEmoji } from "./usage.js";
 import { activeBackgroundIndex } from "./backgrounds.js";
 import { addedNote } from "./addnote.js";
@@ -51,7 +53,7 @@ const mandalaStatus = document.getElementById("mandalaStatus");
 let lastDescription = "", statusTimer = null;
 function describeForScreenReaders(){
   const text = describeMandala(state, getShape(state.shape), currentParams());
-  canvasEl.setAttribute("aria-label", "Your emoji mandala. " + text);
+  canvasEl.setAttribute("aria-label", cardLabel(cardLines(state.card.message)) + "Your emoji mandala. " + text);
   document.getElementById("rotation").setAttribute("aria-valuetext", state.rotation + "°");
   document.getElementById("emojiSize").setAttribute("aria-valuetext", state.emojiSize + "px");
   if (text === lastDescription) return;
@@ -587,6 +589,84 @@ function setupSections(){
   apply();
 }
 setupSections();
+
+// Greeting card: message, layout and share note. The layout is saved per device;
+// the message and note only for this tab (a card is usually a one-off).
+function setupCard(){
+  const message = document.getElementById("cardMessage");
+  const cutNote = document.getElementById("cardMessageStatus");
+  const layoutHint = document.getElementById("cardLayoutHint");
+  const note = document.getElementById("shareNote");
+  const layoutBtns = [...document.querySelectorAll(".layout-btn")];
+  const card = state.card;
+
+  try {
+    const layout = localStorage.getItem("mandala.card.layout");
+    if (layoutBtns.some(b => b.dataset.layout === layout)) card.layout = layout;
+  } catch(e) {}
+  try {
+    const saved = JSON.parse(sessionStorage.getItem("mandala.card"));
+    if (saved && typeof saved.message === "string"){
+      card.message = limitMessage(saved.message).text;
+      card.noteMirrors = saved.noteMirrors !== false;
+      card.note = card.noteMirrors || typeof saved.note !== "string" ? mirrorNote(card.message) : saved.note;
+    }
+  } catch(e) {}
+
+  function remember(){
+    try { sessionStorage.setItem("mandala.card", JSON.stringify({ message: card.message, note: card.note, noteMirrors: card.noteMirrors })); } catch(e) {}
+  }
+  function sync(){
+    layoutBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.layout === card.layout)));
+    layoutHint.hidden = cardLines(card.message)[0] !== "";
+  }
+
+  message.value = card.message;
+  note.value = card.note;
+  sync();
+  document.getElementById("shareNoteField").hidden = !canNativeShare();
+
+  // Enter on the second line does nothing.
+  message.addEventListener("keydown", e => {
+    if (e.key === "Enter" && message.value.includes("\n") && message.selectionStart === message.selectionEnd) e.preventDefault();
+  });
+  message.addEventListener("input", () => {
+    const { text, cut } = limitMessage(message.value);
+    if (text !== message.value) message.value = text;
+    cutNote.textContent = cut ? "Cut to two lines of 60 characters." : "";
+    cutNote.hidden = !cut;
+    card.message = text;
+    if (card.noteMirrors){
+      card.note = mirrorNote(text);
+      note.value = card.note;
+    }
+    remember();
+    sync();
+    draw();
+  });
+  note.addEventListener("input", () => {
+    const next = noteAfterEdit(note.value, card.message);
+    card.note = next.note;
+    card.noteMirrors = next.noteMirrors;
+    if (note.value !== card.note) note.value = card.note;
+    remember();
+  });
+  layoutBtns.forEach(b => b.addEventListener("click", () => {
+    card.layout = b.dataset.layout;
+    try { localStorage.setItem("mandala.card.layout", card.layout); } catch(e) {}
+    sync();
+    draw();
+  }));
+
+  // The card's fonts load lazily; redraw once they are in so the first frame isn't a fallback.
+  if (document.fonts && document.fonts.load){
+    Promise.allSettled([
+      document.fonts.load("600 64px Fraunces", "Aa"),
+      document.fonts.load("500 40px Sora", "Aa"),
+    ]).then(() => { if (card.message) draw(); });
+  }
+}
+setupCard();
 
 // Initial draw
 draw();

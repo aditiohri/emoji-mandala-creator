@@ -1,7 +1,22 @@
 import { canvas } from "./draw.js";
+import { state } from "./state.js";
+import { cardLines, cardLabel, cardFilename, shareFields } from "./card.js";
 
+// Named from line 1 of the card message; the dated name when there is none.
 export function mandalaFilename(){
-  return "mandala-" + new Date().toISOString().slice(0,10) + ".png";
+  return cardFilename(cardLines(state.card.message)[0]);
+}
+
+// Title and (optional) note for navigator.share.
+function shareData(file){
+  const { title, text } = shareFields(state.card.message, state.card.note, state.card.noteMirrors);
+  return text ? { files: [file], title, text } : { files: [file], title };
+}
+
+// Can this browser share image files? (Unhides the Share button and the share note.)
+export function canNativeShare(){
+  return !!(navigator.share && navigator.canShare &&
+    navigator.canShare({ files: [new File([], "test.png", { type: "image/png" })] }));
 }
 
 export function renderBlob(){
@@ -19,6 +34,7 @@ export function showExportImage(dataUrl){
   const exportPanel = document.getElementById("exportPanel");
   const exportImg = document.getElementById("exportImg");
   exportImg.src = dataUrl;
+  exportImg.alt = cardLabel(cardLines(state.card.message)) + "Rendered emoji mandala";
   exportPanel.hidden = false;
   announce("Your mandala is ready below. Press and hold the image to save or share it.");
   exportPanel.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" });
@@ -68,7 +84,7 @@ export function setupSaveButton(){
       try{
         const file = new File([blob], filename, { type: "image/png" });
         if (navigator.canShare({ files: [file] })){
-          await navigator.share({ files: [file], title: "Emoji mandala" });
+          await navigator.share(shareData(file));
           btn.textContent = "Shared ✓"; announce("Mandala shared"); reset(); return;
         }
       } catch(err){
@@ -95,9 +111,7 @@ export function setupSaveButton(){
 
 export function setupShareButton(){
   const shareBtn = document.getElementById("share");
-  const canNativeShare = !!(navigator.share && navigator.canShare &&
-    navigator.canShare({ files: [new File([], "test.png", { type: "image/png" })] }));
-  if (canNativeShare){
+  if (canNativeShare()){
     shareBtn.hidden = false;
     shareBtn.addEventListener("click", async () => {
       const original = shareBtn.textContent;
@@ -106,7 +120,7 @@ export function setupShareButton(){
       const blob = await renderBlob();
       try{
         const file = new File([blob], mandalaFilename(), { type: "image/png" });
-        await navigator.share({ files: [file], title: "Emoji mandala" });
+        await navigator.share(shareData(file));
         announce("Mandala shared");
       } catch(err){ /* cancelled or unsupported at call time */ }
       shareBtn.textContent = original;
