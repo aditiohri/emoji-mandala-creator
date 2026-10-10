@@ -245,7 +245,42 @@ as an independent willingness-to-pay signal.
 **Deferred** unless the app itself shows traction: personal gallery,
 accounts/sync, native mobile wrapper.
 
-## 4. Accessibility, touch and screen reader (decided 2026-10-09; do this next)
+## 4. MVP part 1: UI polish (decided 2026-10-09; do this next)
+
+From the user's notes; all of it is MVP. Each is small; bundle into one
+session. The bug report / feedback button matters most early, so testers
+can report problems.
+- [ ] **"Show all controls" as an icon**, not big text (mind the accessible
+  name and 44 px target from slice D).
+- [ ] **Show all / Hide all needs per-section state.** Today it flips back to
+  "Hide all" as soon as one section is open, which misleads. Show an
+  indicator per section (and probably a mixed state on the master button).
+- [ ] **Background colour: first two options are confusing.** The user can't
+  tell them apart. Look at what each does; rename, merge or explain.
+- [ ] **Gradient backgrounds: pick custom colours** (today presets/limited).
+  Extends `js/backgrounds.js`.
+- [ ] **Bug report / feedback option** that opens a prefilled GitHub issue
+  (no backend, stays static). Decide what to prefill (app version, browser,
+  current settings?) and keep it opt-in.
+
+## 5. MVP part 2: Greeting cards, add a message and send (decided MVP 2026-10-09; design in its own session first)
+
+Let someone add their own text to a mandala and send it like a greeting card.
+Raised 2026-10-09; part of the MVP with item 4. Design in its own session
+(brainstorm, spec, plan). Goal: cards for different occasions (birthday,
+thank-you, holidays, etc.), so also consider occasion presets (starter text,
+fonts, palettes). Open questions to settle then:
+- Where the text goes (over the mandala, a frame or caption, or a card layout
+  around it) and how it is styled and wrapped.
+- Filename comes from the message instead of the default
+  `mandala-<date>.png`; share/save sheet text carries the message rather than
+  the default "Emoji mandala" title.
+- Accessibility from the start: the message as real text (alt text for the
+  exported image, readable by screen readers), contrast over any background.
+- Still static and serverless (no accounts); sending means the existing
+  save/share flow.
+
+## 6. Accessibility, touch and screen reader (after the MVP, items 4-5; decided 2026-10-09)
 
 One track, run serially at first: the sliders, drag-reorder and screen-reader
 fixes touch the same UI files, so parallel orchestrators would conflict. Known
@@ -301,7 +336,7 @@ is sticky and unreliable on touch; screen-reader use should be easy.
 - Parallelism: only after the audit shows which files each slice touches, and
   only for slices that do not overlap.
 
-## 5. Platform: device UX (exploration only, after item 4)
+## 7. Platform: device UX (exploration only, after item 6)
 
 Not a feature; run as a separate exploratory session, outside the plan
 pipeline. Starting view (to test, not settled): the PWA already installs and
@@ -310,38 +345,7 @@ A Chrome extension fits poorly (suits tools that act on pages). A native app
 is cheapest as a Capacitor wrap of the existing web code (store presence,
 native share/photos). Rust has no clear role (no heavy compute, and the
 project is deliberately build-free); revisit only on a real performance wall.
-Item 4's fixes carry over to any wrapper, so nothing is wasted by going first.
-
-## 6. Greeting cards: add a message and send (idea; ideate separately, not started)
-
-Let someone add their own text to a mandala and send it like a greeting card.
-Raised 2026-10-09; to be designed in its own session, after item 4. Open
-questions to settle then:
-- Where the text goes (over the mandala, a frame or caption, or a card layout
-  around it) and how it is styled and wrapped.
-- Filename comes from the message instead of the default
-  `mandala-<date>.png`; share/save sheet text carries the message rather than
-  the default "Emoji mandala" title.
-- Accessibility from the start: the message as real text (alt text for the
-  exported image, readable by screen readers), contrast over any background.
-- Still static and serverless (no accounts); sending means the existing
-  save/share flow.
-
-## 7. UI polish (raised 2026-10-09; small, good for Sonnet/Haiku)
-
-From the user's notes. Each is small; bundle into one session.
-- [ ] **"Show all controls" as an icon**, not big text (mind the accessible
-  name and 44 px target from slice D).
-- [ ] **Show all / Hide all needs per-section state.** Today it flips back to
-  "Hide all" as soon as one section is open, which misleads. Show an
-  indicator per section (and probably a mixed state on the master button).
-- [ ] **Background colour: first two options are confusing.** The user can't
-  tell them apart. Look at what each does; rename, merge or explain.
-- [ ] **Gradient backgrounds: pick custom colours** (today presets/limited).
-  Extends `js/backgrounds.js`.
-- [ ] **Bug report / feedback option** that opens a prefilled GitHub issue
-  (no backend, stays static). Decide what to prefill (app version, browser,
-  current settings?) and keep it opt-in.
+Item 6's fixes carry over to any wrapper, so nothing is wasted by going first.
 
 ## 8. More shapes (research, then slices)
 
@@ -352,7 +356,7 @@ From the user's notes. Each is small; bundle into one session.
 
 ## 9. Physical and printable products (ideas; ideate separately, not started)
 
-Pairs naturally with item 6 (greeting cards). All would stay static and
+Pairs naturally with item 5 (greeting cards). All would stay static and
 serverless where possible.
 - [ ] **DIY printout PDFs for colouring pages** (line-art version of the
   mandala, print-sized).
