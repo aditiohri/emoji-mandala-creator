@@ -23,7 +23,7 @@ export const state = {
   zoom: 100,
   background: { type: "system" },
   // Greeting card (js/card.js). `note` is the share note; while noteMirrors it follows the message.
-  card: { message: "", layout: "caption", note: "", noteMirrors: true }
+  card: { message: "", layout: "caption", textSize: 100, note: "", noteMirrors: true }
 };
 
 export function seededPick(seedNum, arr){

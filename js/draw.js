@@ -95,7 +95,7 @@ function currentCard(){
     ctx.restore();
     return w;
   };
-  return cardLayout(lines, state.card.layout, measure);
+  return cardLayout(lines, state.card.layout, measure, state.card.textSize);
 }
 
 export function draw(){

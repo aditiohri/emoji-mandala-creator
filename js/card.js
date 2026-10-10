@@ -100,9 +100,9 @@ export function needsHalo(background, inkIsLight){
 
 const rad = deg => deg * Math.PI / 180;
 
-function steps(from, to){
+function steps(from, to, k = 1){
   const out = [];
-  for (let s = from; s >= to; s -= 2) out.push(s);
+  for (let s = Math.round(from * k); s >= Math.round(to * k); s -= 2) out.push(s);
   return out;
 }
 
@@ -132,28 +132,64 @@ function wrapTwo(text, width, maxW){
   return [head.trimEnd(), g.slice(at).join("").trimStart()];
 }
 
-function captionLayout([l1, l2], measure){
+// The preview is a circle, so the caption must fit inside it: rows are placed
+// below the mandala and each is kept within the circle's chord at its bottom edge.
+// The text is as big as it can be; the mandala shrinks to make room.
+const CIRCLE = 500, SIDE = 36;
+const chord = bottom => 2 * Math.sqrt(Math.max(0, CIRCLE * CIRCLE - (bottom - 500) ** 2)) - 2 * SIDE;
+const rowBottom = (y, size) => y + size * 0.6;
+
+function captionTry([l1, l2], measure, M, allowWrap, minSize, k){
   const run = (text, fontFn, size, y) => ({ text, font: fontFn(size), size, x: 500, y });
-  const w1 = fitSize(l1, font1, steps(64, 40), 900, measure);
-  let area, runs, bottom;
-  if (w1 !== null){
-    area = { cx: 500, cy: 400, size: 760 };
-    runs = [run(l1, font1, w1, 865)];
-    bottom = 940;
-  } else {
-    const width = t => measure(t, font1(40));
-    let [a, b] = wrapTwo(l1, width, 900);
-    if (width(b) > 900) b = ellipsize(b, width, 900);
-    area = { cx: 500, cy: 370, size: 700 };
-    runs = [run(a, font1, 40, 830), run(b, font1, 40, 890)];
-    bottom = 960;
-  }
+  const fits = (text, fontFn, size, y) => measure(text, fontFn(size)) <= chord(rowBottom(y, size));
+  let y = 68 + M;                       // top of the text zone (mandala has 40 above, 28 gap)
+  const runs = [];
+  let size = steps(84, minSize, k).find(s => fits(l1, font1, s, y + s * 0.6));
+  if (size !== undefined){
+    runs.push(run(l1, font1, size, y + size * 0.6));
+    y += size * 1.2;
+  } else if (allowWrap){
+    for (const s of steps(60, 48, k)){
+      const y1 = y + s * 0.6, y2 = y1 + s * 1.12;
+      let [a, b] = wrapTwo(l1, t => measure(t, font1(s)), chord(rowBottom(y1, s)));
+      if (!fits(b, font1, s, y2)){
+        if (s > Math.round(48 * k) || M > 520) continue;   // cut with an ellipsis only after the mandala is as small as it goes
+        b = ellipsize(b, t => measure(t, font1(s)), chord(rowBottom(y2, s)));
+      }
+      runs.push(run(a, font1, s, y1), run(b, font1, s, y2));
+      y = y2 + s * 0.6 + s * 0.2;
+      break;
+    }
+    if (!runs.length) return null;
+  } else return null;
   if (l2){
-    const w2 = fitSize(l2, font2, steps(40, 28), 800, measure);
-    if (w2 !== null) runs.push(run(l2, font2, w2, bottom));
-    else runs.push(run(ellipsize(l2, t => measure(t, font2(28)), 800), font2, 28, bottom));
+    y += 14;
+    const s2 = steps(52, 28, k).find(s => fits(l2, font2, s, y + s * 0.6));
+    if (s2 !== undefined){
+      runs.push(run(l2, font2, s2, y + s2 * 0.6));
+    } else if (M > 520){
+      return null;                        // shrink the mandala before wrapping or cutting the sign-off
+    } else {
+      const s = Math.round(30 * k), y1 = y + s * 0.6, y2 = y1 + s * 1.15;
+      const width = t => measure(t, font2(s));
+      let [a, b] = wrapTwo(l2, width, chord(rowBottom(y1, s)));
+      if (width(b) > chord(rowBottom(y2, s))) b = ellipsize(b, width, chord(rowBottom(y2, s)));
+      runs.push(run(a, font2, s, y1), run(b, font2, s, y2));
+    }
   }
-  return { area, runs };
+  const last = runs[runs.length - 1];
+  if (rowBottom(last.y, last.size) > 975) return null;
+  return { area: { cx: 500, cy: 40 + M / 2, size: M }, runs };
+}
+
+function captionLayout(lines, measure, k){
+  // Prefer big text over a big mandala: 72 px and up, then 56 px and up, then two rows.
+  for (const [wrap, min] of [[false, 72], [false, 56], [true, 56]])
+    for (let M = 680; M >= 520; M -= 20){
+      const L = captionTry(lines, measure, M, wrap, min, k);
+      if (L) return L;
+    }
+  return captionTry([lines[0].slice(0, 20) + "…", lines[1]], measure, 520, true, 56, k);
 }
 
 // Glyphs laid along a circle. `top`: reads clockwise over the top with tops
@@ -186,15 +222,17 @@ function arcRuns(text, fontFn, sizes, radius, maxDeg, top, measure){
   });
 }
 
-function edgeLayout([l1, l2], measure){
-  const runs = arcRuns(l1, font1, steps(58, 32), 420, 160, true, measure);
-  if (l2) runs.push(...arcRuns(l2, font2, steps(40, 28), 425, 140, false, measure));
+function edgeLayout([l1, l2], measure, k){
+  const runs = arcRuns(l1, font1, steps(68, 32, k), 420, 160, true, measure);
+  if (l2) runs.push(...arcRuns(l2, font2, steps(50, 28, k), 425, 140, false, measure));
   return { area: { cx: 500, cy: 500, size: 720 }, runs };
 }
 
 // The mandala's `area` plus the text runs, or { area: null, runs: [] } when
-// there is no message. `measure(text, font)` returns a width in pixels.
-export function cardLayout(lines, layoutId, measure){
+// there is no message. `measure(text, font)` returns a width in pixels;
+// `textSize` is a percentage (70-130) of the default text sizes.
+export function cardLayout(lines, layoutId, measure, textSize = 100){
   if (!lines[0]) return { area: null, runs: [] };
-  return layoutId === "edge" ? edgeLayout(lines, measure) : captionLayout(lines, measure);
+  const k = Math.min(130, Math.max(70, textSize)) / 100;
+  return layoutId === "edge" ? edgeLayout(lines, measure, k) : captionLayout(lines, measure, k);
 }

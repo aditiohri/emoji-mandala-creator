@@ -605,6 +605,10 @@ function setupCard(){
     if (layoutBtns.some(b => b.dataset.layout === layout)) card.layout = layout;
   } catch(e) {}
   try {
+    const size = Number(localStorage.getItem("mandala.card.textSize"));
+    if (size >= 70 && size <= 130) card.textSize = size;
+  } catch(e) {}
+  try {
     const saved = JSON.parse(sessionStorage.getItem("mandala.card"));
     if (saved && typeof saved.message === "string"){
       card.message = limitMessage(saved.message).text;
@@ -650,6 +654,19 @@ function setupCard(){
     card.noteMirrors = next.noteMirrors;
     if (note.value !== card.note) note.value = card.note;
     remember();
+  });
+  const sizeInput = document.getElementById("cardTextSize");
+  function syncSize(){
+    sizeInput.value = card.textSize;
+    document.getElementById("cardTextSizeVal").textContent = card.textSize + "%";
+    sizeInput.setAttribute("aria-valuetext", card.textSize + "%");
+  }
+  syncSize();
+  sizeInput.addEventListener("input", () => {
+    card.textSize = Number(sizeInput.value);
+    try { localStorage.setItem("mandala.card.textSize", String(card.textSize)); } catch(e) {}
+    syncSize();
+    draw();
   });
   layoutBtns.forEach(b => b.addEventListener("click", () => {
     card.layout = b.dataset.layout;

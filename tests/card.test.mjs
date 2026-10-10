@@ -124,68 +124,76 @@ test("cardLabel: quotes both lines with a slash; empty message gives empty strin
   assert.equal(cardLabel(["", ""]), "");
 });
 
-// --- layout: caption -----------------------------------------------------------------
+// --- layout: caption (text kept inside the circular preview) -------------------------------
 
-test("caption: short line sits at 76 %, one row at 64 px", () => {
+// Half the width of the circle (radius 500) at a given y.
+const half = y => Math.sqrt(Math.max(0, 500 * 500 - (y - 500) ** 2));
+const rowsOf = (L, re) => L.runs.filter(r => re.test(r.font));
+const insideCircle = (L, m) => L.runs.every(r => {
+  const bottom = r.y + r.size * 0.6;
+  return m(r.text, r.font) / 2 <= half(bottom);
+});
+
+test("caption: short message gets big text, one row, mandala above it", () => {
   const L = cardLayout(["Happy birthday, Maya!", "love, Didi"], "caption", measure);
-  assert.deepEqual(L.area, { cx: 500, cy: 400, size: 760 });
   assert.equal(L.runs.length, 2);
   const [r1, r2] = L.runs;
-  assert.equal(r1.text, "Happy birthday, Maya!");
-  assert.equal(r1.size, 64);
+  assert.ok(r1.size >= 72);
   assert.equal(r1.x, 500);
-  assert.equal(r2.text, "love, Didi");
-  assert.equal(r2.size, 40);
+  assert.ok(r2.size >= 48 && r2.size <= 52);
   assert.ok(r2.y > r1.y);
   assert.match(r1.font, /Fraunces/);
   assert.match(r2.font, /Sora/);
   assert.match(r1.font, /Apple Color Emoji/);
+  assert.equal(L.area.cx, 500);
+  assert.ok(L.area.size >= 520 && L.area.size <= 680);
+  // the mandala ends above the first row of text
+  assert.ok(L.area.cy + L.area.size / 2 < r1.y - r1.size / 2);
+  assert.ok(insideCircle(L, measure));
 });
 
-test("caption: line 1 shrinks in 2 px steps until it fits 900 px", () => {
-  // 40 chars * 0.5 em: fits 900 at 45 px => first even size is 44.
-  const L = cardLayout(["a".repeat(40), ""], "caption", measure);
-  assert.equal(L.runs[0].size, 44);
-  assert.ok(measure(L.runs[0].text, L.runs[0].font) <= 900);
-  assert.deepEqual(L.area, { cx: 500, cy: 400, size: 760 });
+test("caption: longer text never leaves the circle", () => {
+  for (const n of [10, 20, 30, 40, 60]) {
+    const L = cardLayout(["a".repeat(n), "b".repeat(n)], "caption", measure);
+    assert.ok(insideCircle(L, measure), `n=${n}`);
+  }
 });
 
-test("caption: line 1 too long at 40 px wraps to two rows and the mandala shrinks to 70 %", () => {
-  const text = "wishing you a wonderful birthday full of joy and cake today friend";
-  const l1 = text.slice(0, 60);
+test("caption: line 1 is never smaller than 56 px on one row", () => {
+  const L = cardLayout(["a".repeat(26), ""], "caption", measure);
+  const rows = rowsOf(L, /Fraunces/);
+  assert.equal(rows.length, 1);
+  assert.ok(rows[0].size >= 56);
+  assert.ok(insideCircle(L, measure));
+});
+
+test("caption: line 1 too long for one row wraps to two and still fits the circle", () => {
+  const l1 = "wishing you a wonderful birthday full of joy now";
   const L = cardLayout([l1, "xo"], "caption", mid);
-  assert.deepEqual(L.area, { cx: 500, cy: 370, size: 700 });
-  const rows = L.runs.filter(r => r.size === 40 && /Fraunces/.test(r.font));
+  const rows = rowsOf(L, /Fraunces/);
   assert.equal(rows.length, 2);
   assert.equal(rows[0].text + " " + rows[1].text, l1);
-  for (const r of rows) assert.ok(mid(r.text, r.font) <= 900);
   assert.ok(rows[1].y > rows[0].y);
-  const sign = L.runs.find(r => /Sora/.test(r.font));
-  assert.ok(sign.y > rows[1].y);
+  assert.ok(insideCircle(L, mid));
+  assert.ok(rowsOf(L, /Sora/)[0].y > rows[1].y);
 });
 
 test("caption: wrapping breaks a word when no space fits", () => {
-  const l1 = "w".repeat(60);
-  const L = cardLayout([l1, ""], "caption", mid);
-  const rows = L.runs.filter(r => /Fraunces/.test(r.font));
+  const L = cardLayout(["w".repeat(46), ""], "caption", mid);
+  const rows = rowsOf(L, /Fraunces/);
   assert.equal(rows.length, 2);
-  assert.equal(rows[0].text + rows[1].text, l1);
-  assert.ok(mid(rows[0].text, rows[0].font) <= 900);
+  assert.equal(rows[0].text + rows[1].text, "w".repeat(46));
+  assert.ok(insideCircle(L, mid));
 });
 
-test("caption: line 2 shrinks to 28 px, then is cut with an ellipsis", () => {
+test("caption: a sign-off too long for one row wraps to two rows, cut with an ellipsis only after that", () => {
   const L = cardLayout(["Hi", "s".repeat(60)], "caption", wide);
-  const r2 = L.runs.find(r => /Sora/.test(r.font));
-  assert.equal(r2.size, 28);
-  assert.ok(r2.text.endsWith("…"));
-  assert.ok(wide(r2.text, r2.font) <= 800);
-});
-
-test("caption: line 2 sits lower when line 1 wrapped", () => {
-  const long = "m".repeat(60);
-  const a = cardLayout(["Hi", "bye"], "caption", mid).runs.find(r => /Sora/.test(r.font));
-  const b = cardLayout([long, "bye"], "caption", mid).runs.find(r => /Sora/.test(r.font));
-  assert.ok(b.y > a.y);
+  const rows = rowsOf(L, /Sora/);
+  assert.equal(rows.length, 2);
+  assert.ok(rows[1].y > rows[0].y);
+  assert.ok(insideCircle(L, wide));
+  const mild = rowsOf(cardLayout(["Hi", "s".repeat(40)], "caption", wide), /Sora/);
+  assert.ok(mild.every(r => !r.text.endsWith("…")));
 });
 
 test("caption: line 1 only gives one run", () => {
@@ -212,11 +220,11 @@ test("edge: mandala at 72 %, centred", () => {
   assert.deepEqual(L.area, { cx: 500, cy: 500, size: 720 });
 });
 
-test("edge: top line is per glyph, starts at 58 px and reads left to right across the top", () => {
+test("edge: top line is per glyph, starts at 68 px and reads left to right across the top", () => {
   const L = cardLayout(["Happy", ""], "edge", measure);
   assert.equal(L.runs.length, 5);
   assert.deepEqual(L.runs.map(r => r.glyph).join(""), "Happy");
-  assert.equal(L.runs[0].size, 58);
+  assert.equal(L.runs[0].size, 68);
   // x increases left to right; the middle glyph is the topmost point
   for (let i = 1; i < L.runs.length; i++) assert.ok(L.runs[i].x > L.runs[i - 1].x);
   const mid = L.runs[2];
@@ -244,7 +252,7 @@ test("edge: bottom line is upright and runs counter-clockwise, left to right", (
   const L = cardLayout(["Hi", "love, Didi"], "edge", measure);
   const bottom = L.runs.filter(r => /Sora/.test(r.font));
   assert.equal(bottom.length, 10);
-  assert.equal(bottom[0].size, 40);
+  assert.equal(bottom[0].size, 50);
   for (let i = 1; i < bottom.length; i++) {
     assert.ok(bottom[i].x > bottom[i - 1].x, "reads left to right");
     assert.ok(bottom[i].theta < bottom[i - 1].theta, "path runs counter-clockwise");
@@ -288,4 +296,36 @@ test("needsHalo: solids where the ink is under 4.5:1 get one (Coral, Violet, Gol
   assert.equal(needsHalo({ type: "solid", color: "#ff6b4a" }, true), true);
   assert.equal(needsHalo({ type: "solid", color: "#8b6bff" }, true), true);
   assert.equal(needsHalo({ type: "solid", color: "#d4a72c" }, true), true);
+});
+
+// --- text size (percent, 70-130) ----------------------------------------------------------
+
+test("text size: caption text grows and shrinks with the setting, staying in the circle", () => {
+  const lines = ["Happy birthday!", "love, Didi"];
+  const size = pct => cardLayout(lines, "caption", measure, pct).runs[0].size;
+  assert.ok(size(130) > size(100));
+  assert.ok(size(70) < size(100));
+  assert.equal(size(100), cardLayout(lines, "caption", measure).runs[0].size);
+  for (const pct of [70, 100, 130]) assert.ok(insideCircle(cardLayout(lines, "caption", measure, pct), measure), `${pct}%`);
+});
+
+test("text size: bigger text on a long message still fits (smaller mandala or two rows)", () => {
+  const L = cardLayout(["a".repeat(40), "b".repeat(40)], "caption", measure, 130);
+  assert.ok(insideCircle(L, measure));
+  assert.ok(L.area.size >= 520);
+});
+
+test("text size: edge text scales and still respects the arc limits", () => {
+  const lines = ["Happy", "love"];
+  const first = pct => cardLayout(lines, "edge", measure, pct).runs[0].size;
+  assert.ok(first(130) > first(100) && first(70) < first(100));
+  const L = cardLayout(["a".repeat(60), ""], "edge", measure, 130);
+  assert.ok(arcOf(L.runs) <= (160 * Math.PI) / 180 + 1e-9);
+});
+
+test("caption: a long sign-off shrinks the mandala instead of being cut", () => {
+  const plain = cardLayout(["Hi", "short"], "caption", measure);
+  const long = cardLayout(["Hi", "c".repeat(44)], "caption", measure);
+  assert.ok(!rowsOf(long, /Sora/)[0].text.endsWith("…"));
+  assert.ok(long.area.size < plain.area.size);
 });
