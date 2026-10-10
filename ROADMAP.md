@@ -291,7 +291,7 @@ ring of the pattern, G/H letters scattered into the pattern). G and H were
 rejected: scattered letters stop reading as words. Split into 5a-5d; only 5a
 is MVP.
 
-- [ ] **5a. Message on a card (MVP, next up).** Spec (approved 2026-10-09):
+- [x] **5a. Message on a card (MVP; built 2026-10-09 on branch `greeting-cards`, awaiting merge OK).** Spec (approved 2026-10-09):
   `docs/superpowers/specs/2026-10-09-greeting-cards-design.md`. New Card
   section with a two-line message (greeting + sign-off), layouts Caption (B)
   and Around the edge (E), a share note that follows the message until edited,
@@ -306,6 +306,24 @@ is MVP.
   starter text plus matching palette and background, filling the 5a fields.
 - [ ] **5d. Text styling (after 5a).** Font choice, colour and size; bigger
   text for the small phone-strip preview.
+
+  5a result: `js/card.js` (pure, 39 unit tests; 154 in all), `renderTo` takes
+  `card = { area, runs }`, Card section after Background. Checked by
+  `~/.tools/playwright/cards.mjs` (59 real-input checks, axe 0 violations on
+  desktop, dark and phone, contrast table) and `pixeldiff.mjs` (0 px on 8
+  combos vs baselines `baselines/cards-5a-main`; the script was stale and was
+  fixed first: shape slider ids, chip UI, exact compare).
+  Deferred minors:
+  - The spec's "no halo on solids" left Coral, Violet and Gold at 1.9-3.2:1, so
+    the halo now also applies wherever plain ink is under 4.5:1 (`needsHalo`).
+  - Filename slug keeps combining marks (`\p{M}`) so Devanagari words are not
+    split at vowel signs; the spec said letters and digits only.
+  - Fonts are redrawn once at startup; text in a script outside the loaded
+    Fraunces/Sora subsets draws in a fallback until the next redraw.
+  - Enter on line 2 is blocked only when nothing is selected (a selection that
+    spans the newline is replaced; the input handler still caps at two lines).
+  - `usage.test.mjs` failed once in a full parallel run and passed on every
+    rerun and alone (not reproduced).
 
 ## 6. Accessibility, touch and screen reader (after the MVP, items 4-5; decided 2026-10-09)
 
