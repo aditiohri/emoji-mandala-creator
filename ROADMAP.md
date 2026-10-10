@@ -326,3 +326,46 @@ questions to settle then:
   exported image, readable by screen readers), contrast over any background.
 - Still static and serverless (no accounts); sending means the existing
   save/share flow.
+
+## 7. UI polish (raised 2026-10-09; small, good for Sonnet/Haiku)
+
+From the user's notes. Each is small; bundle into one session.
+- [ ] **"Show all controls" as an icon**, not big text (mind the accessible
+  name and 44 px target from slice D).
+- [ ] **Show all / Hide all needs per-section state.** Today it flips back to
+  "Hide all" as soon as one section is open, which misleads. Show an
+  indicator per section (and probably a mixed state on the master button).
+- [ ] **Background colour: first two options are confusing.** The user can't
+  tell them apart. Look at what each does; rename, merge or explain.
+- [ ] **Gradient backgrounds: pick custom colours** (today presets/limited).
+  Extends `js/backgrounds.js`.
+- [ ] **Bug report / feedback option** that opens a prefilled GitHub issue
+  (no backend, stays static). Decide what to prefill (app version, browser,
+  current settings?) and keep it opt-in.
+
+## 8. More shapes (research, then slices)
+
+- [ ] **Research more mandala and sacred-geometry shapes** for the shape
+  strip (the build order in item 1 is finished; new candidates would follow
+  the same Shape interface, crowding rules and spec §1 pattern). Output: a
+  short list with pictures/construction notes, then pick which to build.
+
+## 9. Physical and printable products (ideas; ideate separately, not started)
+
+Pairs naturally with item 6 (greeting cards). All would stay static and
+serverless where possible.
+- [ ] **DIY printout PDFs for colouring pages** (line-art version of the
+  mandala, print-sized).
+- [ ] **Printed cards / custom stationery.**
+- [ ] **DIY stickers** (cut-line / sheet layout for printing at home).
+- Open questions: line-art rendering of emoji (outline vs. simplified), page
+  sizes and bleed, whether any of this is a paid extra (see item 3, tabled).
+
+## 10. Bigger ideas (far off)
+
+- [ ] **Integrated mandala option for emoji pickers**: a mandala maker that
+  plugs into an emoji picker (embed or component). Needs a clean module
+  boundary first; ties to item 3's template idea.
+- [ ] **Your birth chart as an emoji mandala**: map planets/signs/houses to
+  emoji and rings. Needs a design session (data input, ephemeris source that
+  works client-side, accuracy and privacy).
