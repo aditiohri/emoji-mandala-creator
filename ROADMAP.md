@@ -245,7 +245,7 @@ as an independent willingness-to-pay signal.
 **Deferred** unless the app itself shows traction: personal gallery,
 accounts/sync, native mobile wrapper.
 
-## 4. MVP part 1: UI polish (done 2026-10-09, branch `ui-polish`)
+## 4. MVP part 1: UI polish (done and merged 2026-10-09; not pushed)
 
 Spec (approved 2026-10-09): `docs/superpowers/specs/2026-10-09-ui-polish-design.md`.
 The bug report / feedback button moved out of this item (see item 4b).
@@ -282,6 +282,8 @@ collection, like saved palettes and saved backgrounds. Needs its own design
 (what is stored, where it lives, how it loads).
 
 ## 5. MVP part 2: Greeting cards, add a message and send (decided MVP 2026-10-09; design in its own session first)
+
+**Next up (after item 4 merged).** Start with a brainstorm, one question at a time.
 
 Let someone add their own text to a mandala and send it like a greeting card.
 Raised 2026-10-09; part of the MVP with item 4. Design in its own session
