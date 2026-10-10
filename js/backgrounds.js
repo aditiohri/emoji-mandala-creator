@@ -10,7 +10,7 @@ export function getLuminance(r, g, b, a = 1) {
 }
 
 // Parse hex color to RGB
-function hexToRgb(hex) {
+export function hexToRgb(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? {
     r: parseInt(result[1], 16),

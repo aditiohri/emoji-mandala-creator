@@ -1,7 +1,10 @@
 // Greeting card: message text, layout maths, filename and share fields.
 // Pure (no DOM) so it can be unit-tested in Node; draw.js does the drawing.
 
+import { getLuminance, hexToRgb } from "./backgrounds.js";
+
 export const MAX_LINE = 60;
+export const INK_LIGHT = "#f2ecdd", INK_DARK = "#241c38";
 export const DEFAULT_TITLE = "Emoji mandala";
 export const LAYOUTS = [
   { id: "caption", label: "Caption" },
@@ -73,6 +76,24 @@ export function cardFilename(line1, date = new Date()){
     slug = slug.replace(/-+$/g, "");
   }
   return slug ? slug + ".png" : "mandala-" + date.toISOString().slice(0, 10) + ".png";
+}
+
+// --- contrast -----------------------------------------------------------------
+
+function contrast(hexA, hexB){
+  const lum = h => { const c = hexToRgb(h); return getLuminance(c.r, c.g, c.b); };
+  const [a, b] = [lum(hexA), lum(hexB)];
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+// Does the text need a halo? One ink can't be right across a gradient or a photo,
+// and on a solid it only reads if it clears 4.5:1 (Coral, Violet and Gold don't).
+export function needsHalo(background, inkIsLight){
+  if (!background) return false;
+  if (background.type === "gradient" || background.type === "image") return true;
+  if (background.type === "solid" && background.color)
+    return contrast(inkIsLight ? INK_LIGHT : INK_DARK, background.color) < 4.5;
+  return false;
 }
 
 // --- layout (units are a 1000 x 1000 canvas) -------------------------------

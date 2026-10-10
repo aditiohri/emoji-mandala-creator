@@ -2,7 +2,7 @@ import { state, DEFAULT_PALETTE } from "./state.js";
 import { drawBackground } from "./backgrounds.js";
 import { getShape } from "./shapes/index.js";
 import { assignEmoji } from "./pattern.js";
-import { cardLines, cardLayout } from "./card.js";
+import { cardLines, cardLayout, needsHalo, INK_LIGHT, INK_DARK } from "./card.js";
 
 const FONT = "px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
 
@@ -61,16 +61,16 @@ export function renderTo(ctx, W, opts){
   return { used };
 }
 
-// Text runs from card.js: halo first on gradients and images, where one ink
-// can't be right everywhere; plain ink on solid and Auto backgrounds.
+// Text runs from card.js: a halo in the opposite ink goes under the fill where
+// plain ink wouldn't reach 4.5:1 (see needsHalo); otherwise plain ink.
 function drawCardText(ctx, k, runs, dark, background){
-  const halo = background && (background.type === "gradient" || background.type === "image");
+  const halo = needsHalo(background, dark);
   ctx.save();
   ctx.scale(k, k);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineJoin = "round";
-  ctx.fillStyle = dark ? "#f2ecdd" : "#241c38";
+  ctx.fillStyle = dark ? INK_LIGHT : INK_DARK;
   ctx.strokeStyle = dark ? "rgba(36,28,56,0.85)" : "rgba(242,236,221,0.85)";
   for (const r of runs){
     ctx.font = r.font;

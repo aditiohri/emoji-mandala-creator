@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   cardLines, limitMessage, mirrorNote, noteAfterEdit, cardFilename, shareFields,
-  cardLabel, cardLayout, MAX_LINE,
+  cardLabel, cardLayout, needsHalo, MAX_LINE,
 } from "../js/card.js";
 
 // 0.5 em per grapheme: the size is read from the font string.
@@ -267,4 +267,25 @@ test("edge: text too long even at the minimum size is cut with an ellipsis", () 
   const bottom = L.runs.filter(r => /Sora/.test(r.font));
   assert.equal(bottom[bottom.length - 1].glyph, "…");
   assert.ok(arcOf(bottom) <= (140 * Math.PI) / 180 + 1e-9);
+});
+
+// --- halo ------------------------------------------------------------------------------
+
+test("needsHalo: gradients and images always get one", () => {
+  assert.equal(needsHalo({ type: "gradient", color1: "#f7f0e2", color2: "#ffffff" }, false), true);
+  assert.equal(needsHalo({ type: "image" }, true), true);
+});
+
+test("needsHalo: Auto and solids where the ink already reads at 4.5:1 do not", () => {
+  assert.equal(needsHalo({ type: "system" }, false), false);
+  assert.equal(needsHalo({ type: "solid", color: "#f7f0e2" }, false), false); // Cream
+  assert.equal(needsHalo({ type: "solid", color: "#1a1526" }, true), false);  // Deep purple
+  assert.equal(needsHalo({ type: "solid", color: "#ffffff" }, false), false);
+  assert.equal(needsHalo({ type: "solid", color: "#000000" }, true), false);
+});
+
+test("needsHalo: solids where the ink is under 4.5:1 get one (Coral, Violet, Gold with cream ink)", () => {
+  assert.equal(needsHalo({ type: "solid", color: "#ff6b4a" }, true), true);
+  assert.equal(needsHalo({ type: "solid", color: "#8b6bff" }, true), true);
+  assert.equal(needsHalo({ type: "solid", color: "#d4a72c" }, true), true);
 });
