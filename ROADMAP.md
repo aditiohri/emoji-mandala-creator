@@ -247,21 +247,30 @@ accounts/sync, native mobile wrapper.
 
 ## 4. MVP part 1: UI polish (decided 2026-10-09; do this next)
 
-From the user's notes; all of it is MVP. Each is small; bundle into one
-session. The bug report / feedback button matters most early, so testers
-can report problems.
-- [ ] **"Show all controls" as an icon**, not big text (mind the accessible
-  name and 44 px target from slice D).
-- [ ] **Show all / Hide all needs per-section state.** Today it flips back to
-  "Hide all" as soon as one section is open, which misleads. Show an
-  indicator per section (and probably a mixed state on the master button).
-- [ ] **Background colour: first two options are confusing.** The user can't
-  tell them apart. Look at what each does; rename, merge or explain.
-- [ ] **Gradient backgrounds: pick custom colours** (today presets/limited).
-  Extends `js/backgrounds.js`.
-- [ ] **Bug report / feedback option** that opens a prefilled GitHub issue
-  (no backend, stays static). Decide what to prefill (app version, browser,
-  current settings?) and keep it opt-in.
+Spec (approved 2026-10-09): `docs/superpowers/specs/2026-10-09-ui-polish-design.md`.
+The bug report / feedback button moved out of this item (see item 4b).
+- [ ] **"Show all controls" as an icon** (double chevron, 44 px, accessible
+  name kept) with a **mixed state** on the master button; per-section
+  indicators are the existing header chevrons.
+- [ ] **Master button sticky on desktop** (bug: it fell to the bottom of the
+  controls panel).
+- [ ] **Background presets renamed** so the first two are distinguishable:
+  "Auto (matches device)", "Cream", "Deep purple".
+- [ ] **Custom colours inside Background**, always visible (no Type dropdown):
+  live-updating background with a preview swatch and "Save to my backgrounds".
+
+## 4b. Feedback / bug-report button (moved out of item 4, 2026-10-09; future chat)
+
+Opens a prefilled GitHub issue (static, no backend; opt-in settings). Model it
+on the feedback button in the sibling `horary chat` project, but make it unique
+to this app. Matters early so testers can report problems; its own session.
+Open: what to prefill (device line, opt-in mandala settings), placement, wording.
+
+## 4c. Saved settings per shape (idea, 2026-10-09; not MVP)
+
+Let someone save a custom set of slider values for a shape and keep it in a
+collection, like saved palettes and saved backgrounds. Needs its own design
+(what is stored, where it lives, how it loads).
 
 ## 5. MVP part 2: Greeting cards, add a message and send (decided MVP 2026-10-09; design in its own session first)
 
