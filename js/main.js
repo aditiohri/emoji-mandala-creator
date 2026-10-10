@@ -25,13 +25,13 @@ import { activeBackgroundIndex } from "./backgrounds.js";
 import { addedNote } from "./addnote.js";
 import { setupSavedPalettes } from "./savedPalettesUI.js";
 import { describeMandala } from "./describe.js";
-import { SECTION_IDS, defaultSections, parseSections, toggleSection, setAll, allOpen } from "./sections.js";
+import { SECTION_IDS, defaultSections, parseSections, toggleSection, setAll, allOpen, openState } from "./sections.js";
 
 // Preset backgrounds
 const PRESET_BACKGROUNDS = [
-  { type: "system", label: "System" },
-  { type: "solid", color: "#f7f0e2", label: "Light cream" },
-  { type: "solid", color: "#1a1526", label: "Dark purple" },
+  { type: "system", label: "Auto (matches device)" },
+  { type: "solid", color: "#f7f0e2", label: "Cream" },
+  { type: "solid", color: "#1a1526", label: "Deep purple" },
   { type: "solid", color: "#ffffff", label: "Pure white" },
   { type: "solid", color: "#000000", label: "Pure black" },
   { type: "solid", color: "#ff6b4a", label: "Coral" },
@@ -337,7 +337,7 @@ function renderBackgroundPresets() {
       swatch.style.background = bg.color;
     } else if (bg.type === "gradient" && bg.color1 && bg.color2) {
       const angle = bg.angle || 0;
-      swatch.style.background = `linear-gradient(${angle}deg, ${bg.color1}, ${bg.color2})`;
+      swatch.style.background = cssGradient(angle, bg.color1, bg.color2);
     } else if (bg.type === "system") {
       swatch.style.background = "linear-gradient(135deg, #f7f0e2 50%, #1a1526 50%)";
     } else if (bg.type === "image" && bg.dataUrl) {
@@ -409,51 +409,80 @@ function setBackground(bg, idx = bg.idx) {
   draw();
 }
 
+// The canvas measures the angle from "left to right"; CSS gradients start at "up".
+function cssGradient(angle, c1, c2) {
+  return `linear-gradient(${angle + 90}deg, ${c1}, ${c2})`;
+}
+
 function setupBackgroundControls() {
-  const bgTypeSelect = document.getElementById("bgType");
+  const bgGradientInput = document.getElementById("bgGradient");
   const bgColor1Input = document.getElementById("bgColor1");
   const bgColor2Input = document.getElementById("bgColor2");
   const bgColor2Row = document.getElementById("bgColor2Row");
   const bgAngleInput = document.getElementById("bgAngle");
   const bgAngleRow = document.getElementById("bgAngleRow");
   const bgAngleVal = document.getElementById("bgAngleVal");
+  const bgPreview = document.getElementById("bgPreview");
   const bgImageInput = document.getElementById("bgImage");
   const bgAddCustomBtn = document.getElementById("bgAddCustom");
 
-  bgTypeSelect.addEventListener("change", (e) => {
-    if (e.target.value === "gradient") {
-      bgColor2Row.hidden = false;
-      bgAngleRow.hidden = false;
-    } else {
-      bgColor2Row.hidden = true;
-      bgAngleRow.hidden = true;
-    }
-  });
+  // The background the Custom colours controls describe right now.
+  function customFromControls() {
+    if (!bgGradientInput.checked) return { type: "solid", color: bgColor1Input.value };
+    return { type: "gradient", color1: bgColor1Input.value, color2: bgColor2Input.value, angle: parseInt(bgAngleInput.value) };
+  }
 
-  bgAngleInput.addEventListener("input", () => {
+  function updateCustomPreview() {
+    const c = customFromControls();
+    bgPreview.style.background = c.type === "solid" ? c.color
+      : cssGradient(c.angle, c.color1, c.color2);
+    bgColor2Row.hidden = bgAngleRow.hidden = !bgGradientInput.checked;
     bgAngleVal.textContent = bgAngleInput.value + "°";
     bgAngleInput.setAttribute("aria-valuetext", bgAngleVal.textContent);
-  });
+  }
+
+  // Any change to the controls shows up on the canvas straight away (no swatch is
+  // selected until it is saved; one lights up only if the value matches).
+  function onCustomInput() {
+    updateCustomPreview();
+    setBackground(customFromControls(), undefined);
+  }
+  for (const el of [bgGradientInput, bgColor1Input, bgColor2Input, bgAngleInput]) {
+    el.addEventListener("input", onCustomInput);
+  }
+
+  // After a reload, show the restored colours in the controls so Save saves what is on the canvas.
+  function syncCustomControls(bg) {
+    if (bg.type === "solid") {
+      bgGradientInput.checked = false;
+      bgColor1Input.value = bg.color;
+    } else if (bg.type === "gradient") {
+      bgGradientInput.checked = true;
+      bgColor1Input.value = bg.color1;
+      bgColor2Input.value = bg.color2;
+      bgAngleInput.value = bg.angle || 0;
+    }
+    updateCustomPreview();
+  }
+  updateCustomPreview();
 
   bgAddCustomBtn.addEventListener("click", () => {
-    const type = bgTypeSelect.value;
+    const candidate = customFromControls();
     const customs = getStoredCustomBackgrounds();
-
-    if (type === "solid") {
-      const color = bgColor1Input.value;
-      customs.push({ type: "solid", color, label: "Custom" });
-      saveCustomBackgrounds(customs);
-      setBackground(customs[customs.length - 1], PRESET_BACKGROUNDS.length + customs.length - 1);
-    } else if (type === "gradient") {
-      const color1 = bgColor1Input.value;
-      const color2 = bgColor2Input.value;
-      const angle = parseInt(bgAngleInput.value);
-      customs.push({ type: "gradient", color1, color2, angle, label: "Custom" });
-      saveCustomBackgrounds(customs);
-      setBackground(customs[customs.length - 1], PRESET_BACKGROUNDS.length + customs.length - 1);
-    } else {
-      renderBackgroundPresets();
+    const all = [...PRESET_BACKGROUNDS, ...customs];
+    const existing = activeBackgroundIndex(all, candidate);
+    if (existing >= 0) {
+      setBackground(all[existing], existing);
+      showBackgroundNote("Already in your backgrounds");
+      return;
     }
+    customs.push({ ...candidate, label: "Custom" });
+    if (!saveCustomBackgrounds(customs)) {
+      showBackgroundNote("There's no room to save this on this device. It's used for now, but it won't be in your backgrounds. Remove some saved ones to make room.");
+      return;
+    }
+    setBackground(customs[customs.length - 1], PRESET_BACKGROUNDS.length + customs.length - 1);
+    showBackgroundNote("Saved to your backgrounds");
   });
 
   bgImageInput.addEventListener("change", async (e) => {
@@ -511,6 +540,7 @@ function setupBackgroundControls() {
       }
     } else {
       setBackground(saved);
+      syncCustomControls(saved);
     }
   }
 }
@@ -525,12 +555,21 @@ function setupSections(){
   try { raw = localStorage.getItem("mandala.sections"); } catch(e) {}
   let open = parseSections(raw, defaultSections(isPhone));
   const all = document.getElementById("toggleAll");
+  const desc = document.getElementById("toggleAllDesc");
   function apply(){
     for (const id of SECTION_IDS){
       document.getElementById(`section-${id}-btn`).setAttribute("aria-expanded", String(open[id]));
       document.getElementById(`section-${id}-body`).hidden = !open[id];
     }
-    all.textContent = allOpen(open) ? "Hide all controls" : "Show all controls";
+    const st = openState(open);
+    const name = st === "all" ? "Hide all controls" : "Show all controls";
+    all.dataset.state = st;
+    all.setAttribute("aria-label", name);
+    all.title = name;
+    const count = SECTION_IDS.filter(id => open[id]).length;
+    desc.textContent = st === "some" ? `${count} of ${SECTION_IDS.length} sections open` : "";
+    if (st === "some") all.setAttribute("aria-describedby", "toggleAllDesc");
+    else all.removeAttribute("aria-describedby");
   }
   function change(next){
     open = next;

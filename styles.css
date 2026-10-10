@@ -75,12 +75,21 @@ main{
 @media (max-width: 860px){
   main{ flex-direction:column; }
 }
+/* The wrapper has no box on phone and landscape (the .stage strip rules apply as before). */
+.stage-pin{ display:contents; }
 .toggle-all{
   position:absolute;
   right:8px;
   bottom:8px;
   z-index:1;
+  width:44px; height:44px; min-height:44px;
+  padding:0;
+  display:inline-flex; align-items:center; justify-content:center;
 }
+.toggle-all svg path{ display:none; }
+.toggle-all[data-state="all"] .top-up, .toggle-all[data-state="all"] .bot-up,
+.toggle-all[data-state="none"] .top-down, .toggle-all[data-state="none"] .bot-down,
+.toggle-all[data-state="some"] .top-up, .toggle-all[data-state="some"] .bot-down{ display:inline; }
 
 .stage{
   flex:1;
@@ -107,7 +116,8 @@ main{
    to the top of the stage and keep it in view while the controls scroll. */
 @media (min-width: 861px){
   .stage{ align-items:flex-start; }
-  .canvas-wrap{ position:sticky; top:28px; }
+  .stage-pin{ display:block; position:sticky; top:28px; width:min(560px, 100%); }
+  .canvas-wrap{ width:100%; }
 }
 canvas{
   width:100%;
@@ -173,6 +183,7 @@ canvas{
     border-bottom:none;
     border-right:1px solid var(--line);
   }
+  .stage-pin{ display:contents; }
   .canvas-wrap{ position:relative; top:auto; width:var(--strip-canvas); box-shadow:0 0 0 1px var(--line); }
   .panel{ width:auto; flex:1; min-width:0; border-top:none; border-left:none; }
   .zoom-field{ display:none; }
@@ -599,27 +610,19 @@ emoji-picker{
 .bg-remove:focus-visible{ outline:2px solid var(--coral-text); outline-offset:1px; }
 @media (hover:none){ .bg-remove{ opacity:1; } } /* no hover on touch: always show the badge */
 
-.bg-custom-section{
-  margin-top:8px;
-}
-.bg-custom-section summary{
-  font-size:0.72rem;
-  font-weight:600;
-  text-transform:uppercase;
-  letter-spacing:0.08em;
-  color:var(--text-dim);
-  cursor:pointer;
-  user-select:none;
-  padding:4px 0;
-}
-.bg-custom-section[open] summary{
-  margin-bottom:8px;
-}
-.bg-custom-content{
+.bg-custom{
   display:flex;
   flex-direction:column;
   gap:8px;
-  padding:8px 0;
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid var(--line);
+}
+.bg-custom .group-label{ margin:0; }
+.bg-custom-preview{
+  height:28px;
+  border-radius:8px;
+  border:1px solid var(--line);
 }
 .custom-bg-row{
   display:flex;
@@ -645,9 +648,6 @@ emoji-picker{
 }
 .custom-bg-row input[type="file"]{
   font-size:0.85rem;
-}
-.custom-bg-row select{
-  width:100%;
 }
 .shape-strip{
   display:flex;
@@ -680,7 +680,6 @@ emoji-picker{
   select, .custom-row input[type="text"]{ min-height:44px; }
   .custom-bg-row input[type="color"]{ height:44px; }
   .custom-bg-row input[type="file"]{ min-height:44px; }
-  .bg-custom-section summary{ min-height:44px; display:flex; align-items:center; }
   .emoji-chip{ min-height:44px; }
   .palette-chip{ min-height:44px; min-width:44px; }
   .palette-toolbar .btn{ min-height:44px; }
@@ -717,7 +716,7 @@ emoji-picker{
   .switch input:checked + .slider-pill{ background:Highlight; border-color:Highlight; }
   .switch input:checked + .slider-pill::before{ background:HighlightText; }
   .shape-tile[aria-pressed="true"]{ border-color:Highlight; border-width:4px; }
-  .bg-preset{ forced-color-adjust:none; border-color:ButtonText; }
+  .bg-preset, .bg-custom-preview{ forced-color-adjust:none; border-color:ButtonText; }
   .bg-preset.active{ outline:3px solid Highlight; outline-offset:1px; }
   .emoji-chip.active{ border:2px solid Highlight; }
   .palette-chip{ border-color:ButtonText; }

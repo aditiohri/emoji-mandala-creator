@@ -245,19 +245,28 @@ as an independent willingness-to-pay signal.
 **Deferred** unless the app itself shows traction: personal gallery,
 accounts/sync, native mobile wrapper.
 
-## 4. MVP part 1: UI polish (decided 2026-10-09; do this next)
+## 4. MVP part 1: UI polish (done 2026-10-09, branch `ui-polish`)
 
 Spec (approved 2026-10-09): `docs/superpowers/specs/2026-10-09-ui-polish-design.md`.
 The bug report / feedback button moved out of this item (see item 4b).
-- [ ] **"Show all controls" as an icon** (double chevron, 44 px, accessible
+- [x] **"Show all controls" as an icon** (double chevron, 44 px, accessible
   name kept) with a **mixed state** on the master button; per-section
   indicators are the existing header chevrons.
-- [ ] **Master button sticky on desktop** (bug: it fell to the bottom of the
+- [x] **Master button sticky on desktop** (bug: it fell to the bottom of the
   controls panel).
-- [ ] **Background presets renamed** so the first two are distinguishable:
+- [x] **Background presets renamed** so the first two are distinguishable:
   "Auto (matches device)", "Cream", "Deep purple".
-- [ ] **Custom colours inside Background**, always visible (no Type dropdown):
+- [x] **Custom colours inside Background**, always visible (no Type dropdown):
   live-updating background with a preview swatch and "Save to my backgrounds".
+- Verified with real-input Playwright (all pass), axe 0 violations, unit tests
+  115 pass. Also fixed: gradient swatches and the preview now show the same
+  direction as the canvas (CSS angle is canvas angle + 90).
+- Deferred minors: (a) in landscape phone the master button sits at the bottom
+  of the strip and is cut off until the page scrolls past the header (same
+  before this item); (b) picking a preset does not copy its colours into the
+  Custom pickers; (c) `a3-kbd`/`a4-touch` a11y scripts have stale chip
+  selectors (fail on main too) and `a1-axe` needed updating for the new
+  Custom block.
 
 ## 4b. Feedback / bug-report button (moved out of item 4, 2026-10-09; future chat)
 

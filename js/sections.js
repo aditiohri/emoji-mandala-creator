@@ -27,3 +27,9 @@ export function setAll(open){
 export function allOpen(map){
   return SECTION_IDS.every(id => map[id]);
 }
+
+// "all", "none" or "some": drives the master button's icon and name.
+export function openState(map){
+  const n = SECTION_IDS.filter(id => map[id]).length;
+  return n === SECTION_IDS.length ? "all" : n === 0 ? "none" : "some";
+}

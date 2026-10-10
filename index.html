@@ -35,10 +35,20 @@
   <main>
     <div class="stage">
       <p class="sr-only" id="mandalaStatus" role="status"></p>
-      <div class="canvas-wrap">
-        <canvas id="canvas" width="1000" height="1000" role="img" aria-label="Your emoji mandala"></canvas>
+      <div class="stage-pin">
+        <div class="canvas-wrap">
+          <canvas id="canvas" width="1000" height="1000" role="img" aria-label="Your emoji mandala"></canvas>
+        </div>
+        <button type="button" class="btn small toggle-all" id="toggleAll" data-state="all" aria-label="Hide all controls" title="Hide all controls">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path class="top-up" d="M6 9l6-5 6 5"/>
+            <path class="top-down" d="M6 4l6 5 6-5"/>
+            <path class="bot-up" d="M6 19l6-5 6 5"/>
+            <path class="bot-down" d="M6 14l6 5 6-5"/>
+          </svg>
+        </button>
+        <p class="sr-only" id="toggleAllDesc"></p>
       </div>
-      <button type="button" class="btn small toggle-all" id="toggleAll">Hide all controls</button>
     </div>
 
     <div class="panel">
@@ -154,35 +164,34 @@
             <span class="slider-pill"></span>
           </label>
         </div>
-        <details class="bg-custom-section">
-          <summary>Custom</summary>
-          <div class="bg-custom-content">
-            <div class="custom-bg-row">
-              <label for="bgType">Type</label>
-              <select id="bgType">
-                <option value="solid">Solid color</option>
-                <option value="gradient">Gradient (2 colors)</option>
-              </select>
-            </div>
-            <div class="custom-bg-row">
-              <label for="bgColor1">Color 1</label>
-              <input type="color" id="bgColor1" value="#f7f0e2">
-            </div>
-            <div class="custom-bg-row" id="bgColor2Row" hidden>
-              <label for="bgColor2">Color 2</label>
-              <input type="color" id="bgColor2" value="#1a1526">
-            </div>
-            <div class="custom-bg-row" id="bgAngleRow" hidden>
-              <label for="bgAngle">Angle <span class="val" id="bgAngleVal" aria-hidden="true">0°</span></label>
-              <input type="range" id="bgAngle" min="0" max="360" value="0">
-            </div>
-            <div class="custom-bg-row">
-              <label for="bgImage">Image</label>
-              <input type="file" id="bgImage" accept="image/*">
-            </div>
-            <button class="btn" id="bgAddCustom" type="button">Add to backgrounds</button>
+        <div class="bg-custom" role="group" aria-labelledby="bgCustomLabel">
+          <h3 class="group-label" id="bgCustomLabel">Custom colours</h3>
+          <div class="custom-bg-row">
+            <label for="bgColor1">Color 1</label>
+            <input type="color" id="bgColor1" value="#f7f0e2">
           </div>
-        </details>
+          <div class="toggle-row">
+            <label for="bgGradient">Gradient</label>
+            <label class="switch">
+              <input type="checkbox" id="bgGradient">
+              <span class="slider-pill"></span>
+            </label>
+          </div>
+          <div class="custom-bg-row" id="bgColor2Row" hidden>
+            <label for="bgColor2">Color 2</label>
+            <input type="color" id="bgColor2" value="#1a1526">
+          </div>
+          <div class="custom-bg-row" id="bgAngleRow" hidden>
+            <label for="bgAngle">Angle <span class="val" id="bgAngleVal" aria-hidden="true">0°</span></label>
+            <input type="range" id="bgAngle" min="0" max="360" value="0">
+          </div>
+          <div class="bg-custom-preview" id="bgPreview" aria-hidden="true"></div>
+          <button class="btn" id="bgAddCustom" type="button">Save to my backgrounds</button>
+          <div class="custom-bg-row">
+            <label for="bgImage">Or use an image</label>
+            <input type="file" id="bgImage" accept="image/*">
+          </div>
+        </div>
       </div>
         </div>
       </section>

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { defaultSections, parseSections, toggleSection, setAll, allOpen } from "../js/sections.js";
+import { defaultSections, parseSections, toggleSection, setAll, allOpen, openState } from "../js/sections.js";
 
 test("defaults: phone opens only Shape, desktop opens all", () => {
   assert.deepEqual(defaultSections(true), { palette: false, shape: true, background: false });
@@ -26,4 +26,11 @@ test("setAll and allOpen", () => {
   assert.equal(allOpen(setAll(true)), true);
   assert.equal(allOpen(setAll(false)), false);
   assert.equal(allOpen(defaultSections(true)), false);
+});
+
+test("openState: all, none or some", () => {
+  assert.equal(openState(setAll(true)), "all");
+  assert.equal(openState(setAll(false)), "none");
+  assert.equal(openState({ palette: true, shape: false, background: false }), "some");
+  assert.equal(openState({ palette: true, shape: true, background: false }), "some");
 });
